@@ -1,11 +1,12 @@
 #include <cmath>
 #include <cstdlib>
+#include <vector>
 
 using namespace ns3;
 
 
 vector[] calculateStationsPosiotions(double cellRadius) {
-    vector positions[7];
+    Vector positions[7];
     positions[0] = Vector(0.0, 0.0, 0.0)
     positions[1] = Vector(2 * cellRadius, 0.0, 0.0)
     positions[2] = Vector(cellRadius, cellRadius * sqrt(3), 0.0)
@@ -18,6 +19,7 @@ vector[] calculateStationsPosiotions(double cellRadius) {
 }
 
 vector[] calculateUesPosiotions(double cellRadius, uint32_t numberOfUes) {
+    //zamiast losowania miejsc z calej puli komórek robimy osobno dla kazdej z offsetem
     vector positions[numberOfUes];
     for(int i = 0; i < numberOfUes; i++) {
         double x = rand() % (3 * cellRadius);
@@ -29,12 +31,20 @@ vector[] calculateUesPosiotions(double cellRadius, uint32_t numberOfUes) {
 }
 
 uint32_t findNearestStationIndexForUe(vector uePosition, vector[] stationsPositions) {
+    //obliczenie najblizszej komórki
     for(int i = 0; i < stationsPositions.size(); i++) {
         ...
     }
     return 0;
 }
 
+uint32_t findBestStationIndexForUe(vector uePosition, vector[] stationsPositions) {
+    //algorytm kuby z pracy
+    for(int i = 0; i < stationsPositions.size(); i++) {
+        ...
+    }
+    return 0;
+}
 
 int main(int argc, char *argv[])
 {
@@ -43,6 +53,7 @@ int main(int argc, char *argv[])
     uint32_t NUMBER_OF_STATIONS = 7;
     double cellRadius = 60.0;
     uint32_t numberOfAntennasForSingleStation = 6;
+    bool isAlgorithmUsed = false;
 
 
 
@@ -58,6 +69,8 @@ int main(int argc, char *argv[])
     lteHelper->SetEnbDeviceAttribute("Mtu", UintegerValue(1500));  
     lteHelper->SetUeDeviceAttribute("Mtu", UintegerValue(1500));
     lteHelper->SetAttribute("FadingModel", StringValue("ns3::TraceFadingLossModel"));
+
+    //ustawienie 6 sektorowych anten + Strict Frequency Reuse
 
     //create EPC helper
     Ptr<PointToPointEpcHelper> epcHelper = CreateObject<PointToPointEpcHelper>(); 
@@ -146,9 +159,16 @@ int main(int argc, char *argv[])
     }
 
     //attach UEs to eNBs
-    for(int i=0; i<UES_NUMBER; i++){
-        lteHelper->Attach(ueDevs.Get (i), enbDevs.Get(findNearestStationIndexForUe(uesPositions[i], stationsPositions)));  
+    if (isAlgorithmUsed) {
+        for(int i=0; i<UES_NUMBER; i++){
+            lteHelper->Attach(ueDevs.Get (i), enbDevs.Get(findBestStationIndexForUe(uesPositions[i], stationsPositions)));  
+        }
+    } else {
+        for(int i=0; i<UES_NUMBER; i++){
+            lteHelper->Attach(ueDevs.Get (i), enbDevs.Get(findNearestStationIndexForUe(uesPositions[i], stationsPositions)));  
+        }
     }
+    
 
     //install application
     uint16_t dlPort = 1100;
