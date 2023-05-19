@@ -141,6 +141,18 @@ int main(int argc, char *argv[])
     NetDeviceContainer enbDevs;
     NetDeviceContainer ueDevs;
 
+    //set up strict frequency reuse model
+    lteHelper->SetFfrAlgorithmAttribute ("RsrqThreshold", UintegerValue (32));
+    lteHelper->SetFfrAlgorithmAttribute ("CenterPowerOffset",
+                                            UintegerValue (LteRrcSap::PdschConfigDedicated::dB_6));
+    lteHelper->SetFfrAlgorithmAttribute ("EdgePowerOffset",
+                                            UintegerValue (LteRrcSap::PdschConfigDedicated::dB3));
+    lteHelper->SetFfrAlgorithmAttribute ("CenterAreaTpc", UintegerValue (0));
+    lteHelper->SetFfrAlgorithmAttribute ("EdgeAreaTpc", UintegerValue (3));
+ 
+    //ns3::LteFrStrictAlgorithm works with Absolute Mode Uplink Power Control
+    Config::SetDefault ("ns3::LteUePowerControl::AccumulationEnabled", BooleanValue (false));
+
     for(int i = 0; i < NUMBER_OF_STATIONS; i++) {
         lteHelper->SetEnbAntennaModelType ("ns3::CosineAntennaModel");
         lteHelper->SetEnbAntennaModelAttribute ("Orientation", DoubleValue (0 + i*60));
