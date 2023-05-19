@@ -32,10 +32,23 @@ vector[] calculateUesPosiotions(double cellRadius, uint32_t numberOfUes) {
 
 uint32_t findNearestStationIndexForUe(vector uePosition, vector[] stationsPositions) {
     //obliczenie najblizszej komórki
+    int shortestDistance = 9999999;
+    int indexOfNearestStation = 0;
     for(int i = 0; i < stationsPositions.size(); i++) {
-        ...
+        int distance;
+        int xDist;
+        int yDist;
+
+        xDist = uePosition[0] - stationsPositions[i][0];
+        yDist = uePosition[1] - stationsPositions[i][1];
+
+        distance = sqrt(xDist*xDist + yDist*yDist);
+        if (distance < shortestDistance) {
+            shortestDistance = distance;
+            indexOfNearestStation = i;
+        }
     }
-    return 0;
+    return indexOfNearestStation;
 }
 
 uint32_t findBestStationIndexForUe(vector uePosition, vector[] stationsPositions) {
