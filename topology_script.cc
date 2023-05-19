@@ -140,7 +140,28 @@ int main(int argc, char *argv[])
     //instal devices
     NetDeviceContainer enbDevs;
     NetDeviceContainer ueDevs;
-    enbDevs = lteHelper->InstallEnbDevice(enbNodes);
+
+    //set up strict frequency reuse model
+    lteHelper->SetFfrAlgorithmAttribute ("RsrqThreshold", UintegerValue (32));
+    lteHelper->SetFfrAlgorithmAttribute ("CenterPowerOffset",
+                                            UintegerValue (LteRrcSap::PdschConfigDedicated::dB_6));
+    lteHelper->SetFfrAlgorithmAttribute ("EdgePowerOffset",
+                                            UintegerValue (LteRrcSap::PdschConfigDedicated::dB3));
+    lteHelper->SetFfrAlgorithmAttribute ("CenterAreaTpc", UintegerValue (0));
+    lteHelper->SetFfrAlgorithmAttribute ("EdgeAreaTpc", UintegerValue (3));
+ 
+    //ns3::LteFrStrictAlgorithm works with Absolute Mode Uplink Power Control
+    Config::SetDefault ("ns3::LteUePowerControl::AccumulationEnabled", BooleanValue (false));
+
+    for(int i = 0; i < NUMBER_OF_STATIONS; i++) {
+        lteHelper->SetEnbAntennaModelType ("ns3::CosineAntennaModel");
+        lteHelper->SetEnbAntennaModelAttribute ("Orientation", DoubleValue (0 + i*60));
+        lteHelper->SetEnbAntennaModelAttribute ("Beamwidth",   DoubleValue (60));
+        lteHelper->SetEnbAntennaModelAttribute ("MaxGain",     DoubleValue (0.0));
+
+        enbDevs.Add(lteHelper->InstallEnbDevice(enbNodes.Get(i)));
+    }
+
     ueDevs = lteHelper->InstallUeDevice(ueNodes);
 
     NS_LOG_UNCOND("UEs and eNBs prepared");
