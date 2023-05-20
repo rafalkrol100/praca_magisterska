@@ -21,9 +21,14 @@ vector[] calculateStationsPosiotions(double cellRadius) {
 vector[] calculateUesPosiotions(double cellRadius, uint32_t numberOfUes) {
     //zamiast losowania miejsc z calej puli komórek robimy osobno dla kazdej z offsetem
     vector positions[numberOfUes];
+    vector enbsPositions = calculateStationsPosiotions(cellRadius);
+
     for(int i = 0; i < numberOfUes; i++) {
-        double x = rand() % (3 * cellRadius);
-        double y = rand() % (3 * cellRadius);
+        int enbIndex = i % 7;
+        double enbX = enbPositions[enbIndex][0];
+        double enbY = enbPositions[enbIndex][1];
+        double x = rand() % cellRadius + (enbX - cellRadius);
+        double y = rand() % cellRadius + (enbY - cellRadius);
         positions[i] = Vector(x, y, 0);
     }
 
