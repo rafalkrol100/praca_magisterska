@@ -1,82 +1,25 @@
 #include <cmath>
 #include <cstdlib>
 #include <vector>
+#include "ns3/core-module.h"
+#include "ns3/lte-module.h"
+#include "ns3/internet-stack-helper.h"
+#include "ns3/point-to-point-module.h"
+#include "ns3/ipv4-static-routing.h"
+#include "ns3/ipv4-static-routing-helper.h"
+#include "ns3/position-allocator.h"
+#include "ns3/mobility-module.h"
+#include "ns3/applications-module.h"
+#include "ns3/internet-module.h"
+#include "ns3/flow-monitor-helper.h"
 
 using namespace ns3;
 
-
-vector[] calculateStationsPosiotions(double cellRadius) {
-    Vector positions[7];
-    positions[0] = Vector(0.0, 0.0, 0.0)
-    positions[1] = Vector(2 * cellRadius, 0.0, 0.0)
-    positions[2] = Vector(cellRadius, cellRadius * sqrt(3), 0.0)
-    positions[3] = Vector(-cellRadius, cellRadius * sqrt(3), 0.0)
-    positions[4] = Vector(-2 * cellRadius, 0.0, 0.0)
-    positions[5] = Vector(-cellRadius, -cellRadius * sqrt(3), 0.0)
-    positions[6] = Vector(cellRadius, -cellRadius * sqrt(3), 0.0)
-
-    return positions;
-}
-
-vector[] calculateUesPosiotions(double cellRadius, uint32_t numberOfUes) {
-    //zamiast losowania miejsc z calej puli komórek robimy osobno dla kazdej z offsetem
-    vector positions[numberOfUes];
-    vector enbsPositions = calculateStationsPosiotions(cellRadius);
-
-    for(int i = 0; i < numberOfUes; i++) {
-        int enbIndex = i % 7;
-        double enbX = enbPositions[enbIndex][0];
-        double enbY = enbPositions[enbIndex][1];
-        double x = rand() % cellRadius + (enbX - cellRadius);
-        double y = rand() % cellRadius + (enbY - cellRadius);
-        positions[i] = Vector(x, y, 0);
-    }
-
-    return positions;
-}
-
-uint32_t findNearestStationIndexForUe(vector uePosition, vector[] stationsPositions) {
-    //obliczenie najblizszej komórki
-    int shortestDistance = 9999999;
-    int indexOfNearestStation = 0;
-    for(int i = 0; i < stationsPositions.size(); i++) {
-        int distance;
-        int xDist;
-        int yDist;
-
-        xDist = uePosition[0] - stationsPositions[i][0];
-        yDist = uePosition[1] - stationsPositions[i][1];
-
-        distance = sqrt(xDist*xDist + yDist*yDist);
-        if (distance < shortestDistance) {
-            shortestDistance = distance;
-            indexOfNearestStation = i;
-        }
-    }
-    return indexOfNearestStation;
-}
-
-uint32_t findBestStationIndexForUe(vector uePosition, vector[] stationsPositions) {
-    //algorytm kuby z pracy
-    for(int i = 0; i < stationsPositions.size(); i++) {
-        ...
-    }
-    return 0;
-}
-
 int main(int argc, char *argv[])
 {
-    //geographical parameters for devices
-    uint32_t NUMBER_OF_UES = 1;
-    uint32_t NUMBER_OF_STATIONS = 7;
+    //parameters
     double cellRadius = 60.0;
-    uint32_t numberOfAntennasForSingleStation = 6;
-    bool isAlgorithmUsed = false;
-
-
-
-
-
+    
     //create LTE helper
     Ptr<LteHelper> lteHelper = CreateObject<LteHelper>();
     
@@ -86,9 +29,7 @@ int main(int argc, char *argv[])
     lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(50));
     lteHelper->SetEnbDeviceAttribute("Mtu", UintegerValue(1500));  
     lteHelper->SetUeDeviceAttribute("Mtu", UintegerValue(1500));
-    lteHelper->SetAttribute("FadingModel", StringValue("ns3::TraceFadingLossModel"));
-
-    //ustawienie 6 sektorowych anten + Strict Frequency Reuse
+    lteHelper->SetAttribute ("PathlossModel", StringValue ("ns3::FriisSpectrumPropagationLossModel"));
 
     //create EPC helper
     Ptr<PointToPointEpcHelper> epcHelper = CreateObject<PointToPointEpcHelper>(); 
@@ -103,8 +44,7 @@ int main(int argc, char *argv[])
     //create internet stack helper
     InternetStackHelper internet;  
     internet.Install(remoteHostContainer);
-    NS_LOG_UNCOND("RRHs turned on");
-    
+   
     //set basic internet parameters
     PointToPointHelper p2ph;
     p2ph.SetDeviceAttribute("DataRate", DataRateValue(DataRate("100Gb/s")));
@@ -120,28 +60,24 @@ int main(int argc, char *argv[])
     Ipv4StaticRoutingHelper ipv4RoutingHelper;
     Ptr<Ipv4StaticRouting> remoteHostStaticRouting = ipv4RoutingHelper.GetStaticRouting(remoteHost->GetObject<Ipv4> ());
     remoteHostStaticRouting->AddNetworkRouteTo(Ipv4Address("7.0.0.0"), Ipv4Mask("255.0.0.0"), 1);
-
-    NS_LOG_UNCOND("Internet created");
     
     //nodes containers for eNBs and UEs
     NodeContainer enbNodes;
-    enbNodes.Create (NUMBER_OF_STATIONS);
+    enbNodes.Create (1);
     NodeContainer ueNodes;
-    ueNodes.Create (NUMBER_OF_UES);
+    ueNodes.Create (1);
 
     //lists of devices positions
     Ptr<ListPositionAllocator> enbPositionAlloc = CreateObject<ListPositionAllocator> ();
     Ptr<ListPositionAllocator> uePositionAlloc = CreateObject<ListPositionAllocator> ();
 
     //putting values of coordinates to simulation position array
-    Vector[] stationsPositions = calculateStationsPosiotions(cellRadius);
-    for(int i = 0; i < NUMBER_OF_STATIONS; i++){
-        enbPositionAlloc -> Add(stationsPositions[i]);
+    for(int i = 0; i < 1; i++){
+        enbPositionAlloc -> Add(Vector(0.0, 0.0, 0.0));
     }
     
-    Vector[] uesPositions = calculateUesPosiotions(cellRadius, NUMBER_OF_UES);
-    for(int i = 0; i < NUMBER_OF_UES; i++){
-        uePositionAlloc -> Add(uesPositions[i]);
+    for(int i = 0; i < 1; i++){
+        uePositionAlloc -> Add(Vector(5.0, 0.0, 0.0));
     }
 
     //set mobility parameters
@@ -160,29 +96,32 @@ int main(int argc, char *argv[])
     NetDeviceContainer ueDevs;
 
     //set up strict frequency reuse model
-    lteHelper->SetFfrAlgorithmAttribute ("RsrqThreshold", UintegerValue (32));
-    lteHelper->SetFfrAlgorithmAttribute ("CenterPowerOffset",
-                                            UintegerValue (LteRrcSap::PdschConfigDedicated::dB_6));
-    lteHelper->SetFfrAlgorithmAttribute ("EdgePowerOffset",
-                                            UintegerValue (LteRrcSap::PdschConfigDedicated::dB3));
-    lteHelper->SetFfrAlgorithmAttribute ("CenterAreaTpc", UintegerValue (0));
-    lteHelper->SetFfrAlgorithmAttribute ("EdgeAreaTpc", UintegerValue (3));
- 
+    lteHelper->SetFfrAlgorithmType("ns3::LteFrStrictAlgorithm");
+    lteHelper->SetFfrAlgorithmAttribute("DlCommonSubBandwidth", UintegerValue(6));
+    lteHelper->SetFfrAlgorithmAttribute("UlCommonSubBandwidth", UintegerValue(6));
+    lteHelper->SetFfrAlgorithmAttribute("DlEdgeSubBandOffset", UintegerValue(6));
+    lteHelper->SetFfrAlgorithmAttribute("DlEdgeSubBandwidth", UintegerValue(6));
+    lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandOffset", UintegerValue(6));
+    lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandwidth", UintegerValue(6));
+
+    //set up 6 sector enb
+    for(int i = 0; i < 6; i++) {
+        lteHelper->SetEnbAntennaModelType ("ns3::CosineAntennaModel");
+        lteHelper->SetEnbAntennaModelAttribute ("Orientation", DoubleValue(0 + i*60));
+        lteHelper->SetEnbAntennaModelAttribute ("Beamwidth",   DoubleValue(60));
+        lteHelper->SetEnbAntennaModelAttribute ("MaxGain",     DoubleValue(0.0));
+
+        enbDevs.Add(lteHelper->InstallEnbDevice(enbNodes.Get(0)));
+    }
+
     //ns3::LteFrStrictAlgorithm works with Absolute Mode Uplink Power Control
     Config::SetDefault ("ns3::LteUePowerControl::AccumulationEnabled", BooleanValue (false));
 
-    for(int i = 0; i < NUMBER_OF_STATIONS; i++) {
-        lteHelper->SetEnbAntennaModelType ("ns3::CosineAntennaModel");
-        lteHelper->SetEnbAntennaModelAttribute ("Orientation", DoubleValue (0 + i*60));
-        lteHelper->SetEnbAntennaModelAttribute ("Beamwidth",   DoubleValue (60));
-        lteHelper->SetEnbAntennaModelAttribute ("MaxGain",     DoubleValue (0.0));
-
+    for(int i = 0; i < 1; i++) {
         enbDevs.Add(lteHelper->InstallEnbDevice(enbNodes.Get(i)));
     }
 
     ueDevs = lteHelper->InstallUeDevice(ueNodes);
-
-    NS_LOG_UNCOND("UEs and eNBs prepared");
 
     //install the IP stack on the UEs
     internet.Install(ueNodes);
@@ -198,16 +137,9 @@ int main(int argc, char *argv[])
     }
 
     //attach UEs to eNBs
-    if (isAlgorithmUsed) {
-        for(int i=0; i<UES_NUMBER; i++){
-            lteHelper->Attach(ueDevs.Get (i), enbDevs.Get(findBestStationIndexForUe(uesPositions[i], stationsPositions)));  
-        }
-    } else {
-        for(int i=0; i<UES_NUMBER; i++){
-            lteHelper->Attach(ueDevs.Get (i), enbDevs.Get(findNearestStationIndexForUe(uesPositions[i], stationsPositions)));  
-        }
+    for(int i = 0; i < 1; i++){
+        lteHelper->Attach(ueDevs.Get(i), enbDevs.Get(i));  
     }
-    
 
     //install application
     uint16_t dlPort = 1100;
@@ -222,12 +154,10 @@ int main(int argc, char *argv[])
         serverApps.Add (ulPacketSinkHelper.Install (remoteHost));
 
         UdpClientHelper ulClient (remoteHostAddr, ulPort);
-        ulClient.SetAttribute ("Interval", TimeValue (interPacketInterval));
+        ulClient.SetAttribute ("Interval", TimeValue (MilliSeconds(8.192)));
         ulClient.SetAttribute ("MaxPackets", UintegerValue (1000000));
         clientApps.Add (ulClient.Install (ueNodes.Get(u)));
     }
-
-    NS_LOG_UNCOND("Application installed");
 
     serverApps.Start (Seconds (0.01));
     clientApps.Start (Seconds (0.02));
@@ -236,9 +166,9 @@ int main(int argc, char *argv[])
     FlowMonitorHelper flowHelper;
     flowMonitor = flowHelper.InstallAll();
 
-    clientApps.Stop(simTime);
-    serverApps.Stop(simTime);
-    Simulator::Stop(simTime);
+    clientApps.Stop(MilliSeconds(1000));
+    serverApps.Stop(MilliSeconds(1000));
+    Simulator::Stop(MilliSeconds(1000));
 
     lteHelper->EnablePhyTraces ();
     lteHelper->EnableMacTraces ();
@@ -247,17 +177,10 @@ int main(int argc, char *argv[])
     lteHelper->EnableUlRxPhyTraces ();
     lteHelper->EnableUlTxPhyTraces ();
     
-    //Insert RLC Performance Calculator
-    std::string dlOutFname = "DlRlcStats";
-    dlOutFname.append (tag.str ());
-    std::string ulOutFname = "UlRlcStats";
-    ulOutFname.append (tag.str ());
-    
-    Simulator::Run ();
+    Simulator::Run();
 
-    flowMonitor->SerializeToXmlFile("Results_200_40.xml", false, true);
+    flowMonitor->SerializeToXmlFile("Results.xml", false, true);
 
-    Simulator::Destroy ();
+    Simulator::Destroy();
     return 0;
-
 }

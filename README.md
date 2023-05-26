@@ -9,3 +9,7 @@ https://cttc-lena.gitlab.io/nr/html/getting-started.html
    2.1 ./ns3 configure --disable-werror --enable-examples --enable-tests
    2.2 ./ns3 run [nazwa_katalogu]/praca_magisterska/[nazwa_skryptu]
        (gdzie nazwa_skryptu jest bez rozszerzenia .cc)
+
+## kopiowanie plików
+
+cp /mnt/c/Users/Rafal/Desktop/magister/code/praca_magisterska/[file_name] [file_name]
