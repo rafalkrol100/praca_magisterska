@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
     lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(50));
     lteHelper->SetEnbDeviceAttribute("Mtu", UintegerValue(1500));  
     lteHelper->SetUeDeviceAttribute("Mtu", UintegerValue(1500));
+    lteHelper->SetAttribute ("PathlossModel", StringValue ("ns3::FriisSpectrumPropagationLossModel"));
 
     //create EPC helper
     Ptr<PointToPointEpcHelper> epcHelper = CreateObject<PointToPointEpcHelper>(); 
@@ -93,6 +94,18 @@ int main(int argc, char *argv[])
     //instal devices
     NetDeviceContainer enbDevs;
     NetDeviceContainer ueDevs;
+
+    //set up strict frequency reuse model
+    lteHelper->SetFfrAlgorithmType("ns3::LteFrStrictAlgorithm");
+    lteHelper->SetFfrAlgorithmAttribute("DlCommonSubBandwidth", UintegerValue(6));
+    lteHelper->SetFfrAlgorithmAttribute("UlCommonSubBandwidth", UintegerValue(6));
+    lteHelper->SetFfrAlgorithmAttribute("DlEdgeSubBandOffset", UintegerValue(6));
+    lteHelper->SetFfrAlgorithmAttribute("DlEdgeSubBandwidth", UintegerValue(6));
+    lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandOffset", UintegerValue(6));
+    lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandwidth", UintegerValue(6));
+
+    //ns3::LteFrStrictAlgorithm works with Absolute Mode Uplink Power Control
+    Config::SetDefault ("ns3::LteUePowerControl::AccumulationEnabled", BooleanValue (false));
 
     for(int i = 0; i < 1; i++) {
         enbDevs.Add(lteHelper->InstallEnbDevice(enbNodes.Get(i)));
