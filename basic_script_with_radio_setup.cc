@@ -104,6 +104,16 @@ int main(int argc, char *argv[])
     lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandOffset", UintegerValue(6));
     lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandwidth", UintegerValue(6));
 
+    //set up 6 sector enb
+    for(int i = 0; i < 6; i++) {
+        lteHelper->SetEnbAntennaModelType ("ns3::CosineAntennaModel");
+        lteHelper->SetEnbAntennaModelAttribute ("Orientation", DoubleValue(0 + i*60));
+        lteHelper->SetEnbAntennaModelAttribute ("Beamwidth",   DoubleValue(60));
+        lteHelper->SetEnbAntennaModelAttribute ("MaxGain",     DoubleValue(0.0));
+
+        enbDevs.Add(lteHelper->InstallEnbDevice(enbNodes.Get(0)));
+    }
+
     //ns3::LteFrStrictAlgorithm works with Absolute Mode Uplink Power Control
     Config::SetDefault ("ns3::LteUePowerControl::AccumulationEnabled", BooleanValue (false));
 
