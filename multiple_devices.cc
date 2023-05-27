@@ -1,82 +1,113 @@
 #include <cmath>
 #include <cstdlib>
 #include <vector>
+#include "ns3/core-module.h"
+#include "ns3/lte-module.h"
+#include "ns3/internet-stack-helper.h"
+#include "ns3/point-to-point-module.h"
+#include "ns3/ipv4-static-routing.h"
+#include "ns3/ipv4-static-routing-helper.h"
+#include "ns3/position-allocator.h"
+#include "ns3/mobility-module.h"
+#include "ns3/applications-module.h"
+#include "ns3/internet-module.h"
+#include "ns3/flow-monitor-helper.h"
 
 using namespace ns3;
 
+std::vector<Vector> calculateStationsPosiotions(double cellRadius, bool isLogEnabled) {
+    std::vector<Vector> positions;
+    positions.push_back(Vector(0.0, 0.0, 0.0));
+    positions.push_back(Vector(2 * cellRadius, 0.0, 0.0));
+    positions.push_back(Vector(cellRadius, cellRadius * sqrt(3), 0.0));
+    positions.push_back(Vector(-cellRadius, cellRadius * sqrt(3), 0.0));
+    positions.push_back(Vector(-2 * cellRadius, 0.0, 0.0));
+    positions.push_back(Vector(-cellRadius, -cellRadius * sqrt(3), 0.0));
+    positions.push_back(Vector(cellRadius, -cellRadius * sqrt(3), 0.0));
 
-vector[] calculateStationsPosiotions(double cellRadius) {
-    Vector positions[7];
-    positions[0] = Vector(0.0, 0.0, 0.0)
-    positions[1] = Vector(2 * cellRadius, 0.0, 0.0)
-    positions[2] = Vector(cellRadius, cellRadius * sqrt(3), 0.0)
-    positions[3] = Vector(-cellRadius, cellRadius * sqrt(3), 0.0)
-    positions[4] = Vector(-2 * cellRadius, 0.0, 0.0)
-    positions[5] = Vector(-cellRadius, -cellRadius * sqrt(3), 0.0)
-    positions[6] = Vector(cellRadius, -cellRadius * sqrt(3), 0.0)
-
+    if(isLogEnabled) {
+        NS_LOG_UNCOND("Enb's positions table:");
+        NS_LOG_UNCOND("--------------------------------------------------------");
+    }
+    
+    for(int i = 0; i < positions.size(); i++) {
+        Vector enb = positions[i];
+        double x = enb.x;
+        double y = enb.y;
+        double z = enb.z;
+        
+        if(isLogEnabled) {
+            NS_LOG_UNCOND("| Enb" + std::to_string(i) + " | x: " + std::to_string(x) + " | y: " + std::to_string(y) + " | z: " + std::to_string(z) + " |");
+            NS_LOG_UNCOND("--------------------------------------------------------");
+        } 
+    }
+    
+    if(isLogEnabled) {
+        NS_LOG_UNCOND(" ");
+    } 
+    
     return positions;
 }
 
-vector[] calculateUesPosiotions(double cellRadius, uint32_t numberOfUes) {
-    //zamiast losowania miejsc z calej puli komórek robimy osobno dla kazdej z offsetem
-    vector positions[numberOfUes];
-    vector enbPositions = calculateStationsPosiotions(cellRadius);
+std::vector<Vector> calculateUesPosiotions(double cellRadius, int numberOfUes) {
+    std::vector<Vector> positions;
+    std::vector<Vector> enbPositions = calculateStationsPosiotions(cellRadius, true);
+    const long max_rand = 1000000L;
+    srandom(time(NULL));
+
+    NS_LOG_UNCOND("User equipment positions table:");
+    NS_LOG_UNCOND("--------------------------------------------------------");
 
     for(int i = 0; i < numberOfUes; i++) {
         int enbIndex = i % 7;
-        Vector enbX = enbPositions[enbIndex];
-        Vector enbY = enbPositions[enbIndex];
-        double x = rand() % cellRadius + (enbX - cellRadius);
-        double y = rand() % cellRadius + (enbY - cellRadius);
-        positions[i] = Vector(x, y, 0);
+        Vector enbPosition = enbPositions[enbIndex];
+        double enbX = enbPosition.x;
+        double enbY = enbPosition.y;
+        //bound parameter is used to decrease randomizer bounds to assure that every position is inside of cell radius
+        double bound = (cellRadius*sqrt(2))/2;
+
+        //double random_double = lower_bound + (upper_bound - lower_bound) * (random() % max_rand) / max_rand;
+        double x = (enbX - bound) + 2 * bound * (random() % max_rand) / max_rand;
+        double y = (enbY - bound) + 2 * bound * (random() % max_rand) / max_rand;
+        double z = 0.0;
+        positions.push_back(Vector(x, y, z));
+
+        NS_LOG_UNCOND("| Ue" + std::to_string(i) + " | x: " + std::to_string(x) + " | y: " + std::to_string(y) + " | z: " + std::to_string(z) + " |");
+        NS_LOG_UNCOND("--------------------------------------------------------");
     }
+
+    NS_LOG_UNCOND(" ");
 
     return positions;
 }
 
-uint32_t findNearestStationIndexForUe(vector uePosition, vector[] stationsPositions) {
-    //obliczenie najblizszej komórki
+uint32_t findNearestStationIndexForUe(Vector uePosition, std::vector<Vector> stationsPositions, int index) {
     int shortestDistance = 9999999;
     int indexOfNearestStation = 0;
+
     for(int i = 0; i < stationsPositions.size(); i++) {
-        int distance;
-        int xDist;
-        int yDist;
-
-        xDist = uePosition[0] - stationsPositions[i][0];
-        yDist = uePosition[1] - stationsPositions[i][1];
-
-        distance = sqrt(xDist*xDist + yDist*yDist);
+        double distance = ns3::CalculateDistance(uePosition, stationsPositions[i]);
         if (distance < shortestDistance) {
             shortestDistance = distance;
             indexOfNearestStation = i;
         }
     }
-    return indexOfNearestStation;
-}
+    double ueX = uePosition.x;
+    double ueY = uePosition.y;
+    double ueZ = uePosition.z;
 
-uint32_t findBestStationIndexForUe(vector uePosition, vector[] stationsPositions) {
-    //algorytm kuby z pracy
-    for(int i = 0; i < stationsPositions.size(); i++) {
-        ...
-    }
-    return 0;
+    NS_LOG_UNCOND("Ue" + std::to_string(index) + " (" + std::to_string(ueX) + ", " + std::to_string(ueY) + ", " + std::to_string(ueZ) + ") " + "was attached to enb" + std::to_string(indexOfNearestStation) + ". Distance between them is: " + std::to_string(shortestDistance));
+    NS_LOG_UNCOND("--------------------------------------------------------");
+    return indexOfNearestStation;
 }
 
 int main(int argc, char *argv[])
 {
-    //geographical parameters for devices
-    uint32_t NUMBER_OF_UES = 1;
+    //parameters
+    uint32_t NUMBER_OF_UES = 7;
     uint32_t NUMBER_OF_STATIONS = 7;
     double cellRadius = 60.0;
-    uint32_t numberOfAntennasForSingleStation = 6;
-    bool isAlgorithmUsed = false;
-
-
-
-
-
+    
     //create LTE helper
     Ptr<LteHelper> lteHelper = CreateObject<LteHelper>();
     
@@ -86,9 +117,6 @@ int main(int argc, char *argv[])
     lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(50));
     lteHelper->SetEnbDeviceAttribute("Mtu", UintegerValue(1500));  
     lteHelper->SetUeDeviceAttribute("Mtu", UintegerValue(1500));
-    lteHelper->SetAttribute("FadingModel", StringValue("ns3::TraceFadingLossModel"));
-
-    //ustawienie 6 sektorowych anten + Strict Frequency Reuse
 
     //create EPC helper
     Ptr<PointToPointEpcHelper> epcHelper = CreateObject<PointToPointEpcHelper>(); 
@@ -103,8 +131,7 @@ int main(int argc, char *argv[])
     //create internet stack helper
     InternetStackHelper internet;  
     internet.Install(remoteHostContainer);
-    NS_LOG_UNCOND("RRHs turned on");
-    
+   
     //set basic internet parameters
     PointToPointHelper p2ph;
     p2ph.SetDeviceAttribute("DataRate", DataRateValue(DataRate("100Gb/s")));
@@ -120,8 +147,6 @@ int main(int argc, char *argv[])
     Ipv4StaticRoutingHelper ipv4RoutingHelper;
     Ptr<Ipv4StaticRouting> remoteHostStaticRouting = ipv4RoutingHelper.GetStaticRouting(remoteHost->GetObject<Ipv4> ());
     remoteHostStaticRouting->AddNetworkRouteTo(Ipv4Address("7.0.0.0"), Ipv4Mask("255.0.0.0"), 1);
-
-    NS_LOG_UNCOND("Internet created");
     
     //nodes containers for eNBs and UEs
     NodeContainer enbNodes;
@@ -134,12 +159,12 @@ int main(int argc, char *argv[])
     Ptr<ListPositionAllocator> uePositionAlloc = CreateObject<ListPositionAllocator> ();
 
     //putting values of coordinates to simulation position array
-    Vector[] stationsPositions = calculateStationsPosiotions(cellRadius);
+    std::vector<Vector> stationsPositions = calculateStationsPosiotions(cellRadius, false);
     for(int i = 0; i < NUMBER_OF_STATIONS; i++){
         enbPositionAlloc -> Add(stationsPositions[i]);
     }
     
-    Vector[] uesPositions = calculateUesPosiotions(cellRadius, NUMBER_OF_UES);
+    std::vector<Vector> uesPositions = calculateUesPosiotions(cellRadius, NUMBER_OF_UES);
     for(int i = 0; i < NUMBER_OF_UES; i++){
         uePositionAlloc -> Add(uesPositions[i]);
     }
@@ -159,30 +184,11 @@ int main(int argc, char *argv[])
     NetDeviceContainer enbDevs;
     NetDeviceContainer ueDevs;
 
-    //set up strict frequency reuse model
-    lteHelper->SetFfrAlgorithmAttribute ("RsrqThreshold", UintegerValue (32));
-    lteHelper->SetFfrAlgorithmAttribute ("CenterPowerOffset",
-                                            UintegerValue (LteRrcSap::PdschConfigDedicated::dB_6));
-    lteHelper->SetFfrAlgorithmAttribute ("EdgePowerOffset",
-                                            UintegerValue (LteRrcSap::PdschConfigDedicated::dB3));
-    lteHelper->SetFfrAlgorithmAttribute ("CenterAreaTpc", UintegerValue (0));
-    lteHelper->SetFfrAlgorithmAttribute ("EdgeAreaTpc", UintegerValue (3));
- 
-    //ns3::LteFrStrictAlgorithm works with Absolute Mode Uplink Power Control
-    Config::SetDefault ("ns3::LteUePowerControl::AccumulationEnabled", BooleanValue (false));
-
     for(int i = 0; i < NUMBER_OF_STATIONS; i++) {
-        lteHelper->SetEnbAntennaModelType ("ns3::CosineAntennaModel");
-        lteHelper->SetEnbAntennaModelAttribute ("Orientation", DoubleValue (0 + i*60));
-        lteHelper->SetEnbAntennaModelAttribute ("Beamwidth",   DoubleValue (60));
-        lteHelper->SetEnbAntennaModelAttribute ("MaxGain",     DoubleValue (0.0));
-
         enbDevs.Add(lteHelper->InstallEnbDevice(enbNodes.Get(i)));
     }
 
     ueDevs = lteHelper->InstallUeDevice(ueNodes);
-
-    NS_LOG_UNCOND("UEs and eNBs prepared");
 
     //install the IP stack on the UEs
     internet.Install(ueNodes);
@@ -198,16 +204,11 @@ int main(int argc, char *argv[])
     }
 
     //attach UEs to eNBs
-    if (isAlgorithmUsed) {
-        for(int i=0; i<UES_NUMBER; i++){
-            lteHelper->Attach(ueDevs.Get (i), enbDevs.Get(findBestStationIndexForUe(uesPositions[i], stationsPositions)));  
-        }
-    } else {
-        for(int i=0; i<UES_NUMBER; i++){
-            lteHelper->Attach(ueDevs.Get (i), enbDevs.Get(findNearestStationIndexForUe(uesPositions[i], stationsPositions)));  
-        }
+    NS_LOG_UNCOND("Nearest station finding results:");
+    NS_LOG_UNCOND("----------------------------------------------------------------------------------------");
+    for(int i = 0; i < NUMBER_OF_UES; i++){
+        lteHelper->Attach(ueDevs.Get (i), enbDevs.Get(findNearestStationIndexForUe(uesPositions[i], stationsPositions, i)));  
     }
-    
 
     //install application
     uint16_t dlPort = 1100;
@@ -222,12 +223,10 @@ int main(int argc, char *argv[])
         serverApps.Add (ulPacketSinkHelper.Install (remoteHost));
 
         UdpClientHelper ulClient (remoteHostAddr, ulPort);
-        ulClient.SetAttribute ("Interval", TimeValue (interPacketInterval));
+        ulClient.SetAttribute ("Interval", TimeValue (MilliSeconds(8.192)));
         ulClient.SetAttribute ("MaxPackets", UintegerValue (1000000));
         clientApps.Add (ulClient.Install (ueNodes.Get(u)));
     }
-
-    NS_LOG_UNCOND("Application installed");
 
     serverApps.Start (Seconds (0.01));
     clientApps.Start (Seconds (0.02));
@@ -236,9 +235,9 @@ int main(int argc, char *argv[])
     FlowMonitorHelper flowHelper;
     flowMonitor = flowHelper.InstallAll();
 
-    clientApps.Stop(simTime);
-    serverApps.Stop(simTime);
-    Simulator::Stop(simTime);
+    clientApps.Stop(MilliSeconds(1000));
+    serverApps.Stop(MilliSeconds(1000));
+    Simulator::Stop(MilliSeconds(1000));
 
     lteHelper->EnablePhyTraces ();
     lteHelper->EnableMacTraces ();
@@ -247,17 +246,10 @@ int main(int argc, char *argv[])
     lteHelper->EnableUlRxPhyTraces ();
     lteHelper->EnableUlTxPhyTraces ();
     
-    //Insert RLC Performance Calculator
-    std::string dlOutFname = "DlRlcStats";
-    dlOutFname.append (tag.str ());
-    std::string ulOutFname = "UlRlcStats";
-    ulOutFname.append (tag.str ());
-    
-    Simulator::Run ();
+    Simulator::Run();
 
-    flowMonitor->SerializeToXmlFile("Results_200_40.xml", false, true);
+    flowMonitor->SerializeToXmlFile("Results.xml", false, true);
 
-    Simulator::Destroy ();
+    Simulator::Destroy();
     return 0;
-
 }
