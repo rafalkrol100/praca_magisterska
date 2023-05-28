@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <vector>
+#include <string>
 #include "ns3/core-module.h"
 #include "ns3/lte-module.h"
 #include "ns3/internet-stack-helper.h"
@@ -63,7 +64,7 @@ int main(int argc, char *argv[])
     
     //nodes containers for eNBs and UEs
     NodeContainer enbNodes;
-    enbNodes.Create (1);
+    enbNodes.Create (6);
     NodeContainer ueNodes;
     ueNodes.Create (1);
 
@@ -72,7 +73,7 @@ int main(int argc, char *argv[])
     Ptr<ListPositionAllocator> uePositionAlloc = CreateObject<ListPositionAllocator> ();
 
     //putting values of coordinates to simulation position array
-    for(int i = 0; i < 1; i++){
+    for(int i = 0; i < 6; i++){
         enbPositionAlloc -> Add(Vector(0.0, 0.0, 0.0));
     }
     
@@ -95,6 +96,8 @@ int main(int argc, char *argv[])
     NetDeviceContainer enbDevs;
     NetDeviceContainer ueDevs;
 
+    Config::SetDefault("ns3::LteEnbPhy::TxPower", DoubleValue (43.0));
+
     //set up strict frequency reuse model
     lteHelper->SetFfrAlgorithmType("ns3::LteFrStrictAlgorithm");
     lteHelper->SetFfrAlgorithmAttribute("DlCommonSubBandwidth", UintegerValue(6));
@@ -106,20 +109,16 @@ int main(int argc, char *argv[])
 
     //set up 6 sector enb
     for(int i = 0; i < 6; i++) {
-        lteHelper->SetEnbAntennaModelType ("ns3::CosineAntennaModel");
-        lteHelper->SetEnbAntennaModelAttribute ("Orientation", DoubleValue(0 + i*60));
-        lteHelper->SetEnbAntennaModelAttribute ("Beamwidth",   DoubleValue(60));
-        lteHelper->SetEnbAntennaModelAttribute ("MaxGain",     DoubleValue(0.0));
+        lteHelper->SetEnbAntennaModelType("ns3::CosineAntennaModel");
+        lteHelper->SetEnbAntennaModelAttribute("HorizontalBeamwidth",   DoubleValue(60));
+        lteHelper->SetEnbAntennaModelAttribute("Orientation", DoubleValue(0 + i*60));
+        lteHelper->SetEnbAntennaModelAttribute("MaxGain",     DoubleValue(0.0));
 
-        enbDevs.Add(lteHelper->InstallEnbDevice(enbNodes.Get(0)));
+        enbDevs.Add(lteHelper->InstallEnbDevice(enbNodes.Get(i)));
     }
 
     //ns3::LteFrStrictAlgorithm works with Absolute Mode Uplink Power Control
     Config::SetDefault ("ns3::LteUePowerControl::AccumulationEnabled", BooleanValue (false));
-
-    for(int i = 0; i < 1; i++) {
-        enbDevs.Add(lteHelper->InstallEnbDevice(enbNodes.Get(i)));
-    }
 
     ueDevs = lteHelper->InstallUeDevice(ueNodes);
 
