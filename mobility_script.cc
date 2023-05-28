@@ -317,8 +317,7 @@ int main(int argc, char *argv[])
     for (int i = 0; i < NUMBER_OF_STATIONS; i++)
     {
         Vector stationPosition = stationsPositions[i];
-        std::string bounds = std::to_string(-5 * cellRadius) + "|" + std::to_string(5 * cellRadius) + "|" + std::to_string(-5 * cellRadius) + "|" + std::to_string(5 * cellRadius);
-        NS_LOG_UNCOND(bounds); 
+        std::string bounds = std::to_string(-3 * cellRadius) + "|" + std::to_string(3 * cellRadius) + "|" + std::to_string(-3 * cellRadius) + "|" + std::to_string(3 * cellRadius); 
         if (i == 0)
         {
             std::string x = std::to_string(stationPosition.x);
