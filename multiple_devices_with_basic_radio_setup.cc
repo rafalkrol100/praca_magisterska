@@ -15,6 +15,89 @@
 
 using namespace ns3;
 
+void
+NotifyConnectionEstablishedUe (std::string context,
+                               uint64_t imsi,
+                               uint16_t cellid,
+                               uint16_t rnti)
+{
+  std::cout << context
+            << " UE IMSI " << imsi
+            << ": connected to CellId " << cellid
+            << " with RNTI " << rnti
+            << std::endl;
+}
+
+void
+NotifyHandoverStartUe (std::string context,
+                       uint64_t imsi,
+                       uint16_t cellid,
+                       uint16_t rnti,
+                       uint16_t targetCellId)
+{
+  std::cout << context
+            << " UE IMSI " << imsi
+            << ": previously connected to CellId " << cellid
+            << " with RNTI " << rnti
+            << ", doing handover to CellId " << targetCellId
+            << std::endl;
+}
+
+void
+NotifyHandoverEndOkUe (std::string context,
+                       uint64_t imsi,
+                       uint16_t cellid,
+                       uint16_t rnti)
+{
+  std::cout << context
+            << " UE IMSI " << imsi
+            << ": successful handover to CellId " << cellid
+            << " with RNTI " << rnti
+            << std::endl;
+}
+
+void
+NotifyConnectionEstablishedEnb (std::string context,
+                                uint64_t imsi,
+                                uint16_t cellid,
+                                uint16_t rnti)
+{
+  std::cout << context
+            << " eNB CellId " << cellid
+            << ": successful connection of UE with IMSI " << imsi
+            << " RNTI " << rnti
+            << std::endl;
+}
+
+void
+NotifyHandoverStartEnb (std::string context,
+                        uint64_t imsi,
+                        uint16_t cellid,
+                        uint16_t rnti,
+                        uint16_t targetCellId)
+{
+  std::cout << context
+            << " eNB CellId " << cellid
+            << ": start handover of UE with IMSI " << imsi
+            << " RNTI " << rnti
+            << " to CellId " << targetCellId
+            << std::endl;
+}
+
+void
+NotifyHandoverEndOkEnb (std::string context,
+                        uint64_t imsi,
+                        uint16_t cellid,
+                        uint16_t rnti)
+{
+  std::cout << context
+            << " eNB CellId " << cellid
+            << ": completed handover of UE with IMSI " << imsi
+            << " RNTI " << rnti
+            << std::endl;
+}
+
+
 std::vector<Vector> calculateStationsPosiotions(double cellRadius, bool isLogEnabled) {
     std::vector<Vector> positions;
     positions.push_back(Vector(0.0, 0.0, 0.0));
@@ -101,12 +184,17 @@ uint32_t findNearestStationIndexForUe(Vector uePosition, std::vector<Vector> sta
     return indexOfNearestStation;
 }
 
+void handler()
+{
+    
+}
+
 int main(int argc, char *argv[])
 {
     //parameters
     uint32_t NUMBER_OF_UES = 7;
     uint32_t NUMBER_OF_STATIONS = 7;
-    double cellRadius = 60.0;
+    double cellRadius = 6000.0;
     
     //create LTE helper
     Ptr<LteHelper> lteHelper = CreateObject<LteHelper>();
@@ -150,7 +238,7 @@ int main(int argc, char *argv[])
     
     //nodes containers for eNBs and UEs
     NodeContainer enbNodes;
-    enbNodes.Create (NUMBER_OF_STATIONS);
+    enbNodes.Create (NUMBER_OF_STATIONS * 6);
     NodeContainer ueNodes;
     ueNodes.Create (NUMBER_OF_UES);
 
@@ -161,7 +249,9 @@ int main(int argc, char *argv[])
     //putting values of coordinates to simulation position array
     std::vector<Vector> stationsPositions = calculateStationsPosiotions(cellRadius, false);
     for(int i = 0; i < NUMBER_OF_STATIONS; i++){
-        enbPositionAlloc -> Add(stationsPositions[i]);
+        for (int j = 0; j < 6; j++) {
+            enbPositionAlloc -> Add(stationsPositions[i]);
+        }
     }
     
     std::vector<Vector> uesPositions = calculateUesPosiotions(cellRadius, NUMBER_OF_UES);
@@ -184,9 +274,52 @@ int main(int argc, char *argv[])
     NetDeviceContainer enbDevs;
     NetDeviceContainer ueDevs;
 
-    for(int i = 0; i < NUMBER_OF_STATIONS; i++) {
-        enbDevs.Add(lteHelper->InstallEnbDevice(enbNodes.Get(i)));
+    //set up 6 sector enbs
+    NS_LOG_UNCOND("Cells configuration: ");
+    NS_LOG_UNCOND("----------------------------------------------------------------------------------------");
+    for (int i = 0; i < NUMBER_OF_STATIONS; i++) {
+        NS_LOG_UNCOND("Enb" + std::to_string(i) + ": ");
+
+        for(int j = 0; j < 6; j++) {
+        NS_LOG_UNCOND("    Sector: " + std::to_string(j));
+        //set up strict frequency reuse model
+        lteHelper->SetFfrAlgorithmType("ns3::LteFrStrictAlgorithm");
+        lteHelper->SetFfrAlgorithmAttribute("DlCommonSubBandwidth", UintegerValue(6));
+        lteHelper->SetFfrAlgorithmAttribute("UlCommonSubBandwidth", UintegerValue(6));
+        lteHelper->SetFfrAlgorithmAttribute("DlEdgeSubBandOffset", UintegerValue(6));
+        lteHelper->SetFfrAlgorithmAttribute("DlEdgeSubBandwidth", UintegerValue(6));
+        lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandOffset", UintegerValue(6));
+        lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandwidth", UintegerValue(6));
+
+        std::string antennaModel = "ns3::CosineAntennaModel";
+        double orientation = 0 + j * 60;
+        double horizontalBeamwidth = 60;
+        double maxGain = 0.0;
+        int enbNodeIndex = i * 6 + j;
+
+        NS_LOG_UNCOND("        Antenna Model: " + antennaModel);
+        NS_LOG_UNCOND("        Orientation: " + std::to_string(orientation));
+        NS_LOG_UNCOND("        Horizontal Beam Width: " + std::to_string(horizontalBeamwidth));
+        NS_LOG_UNCOND("        Max Gain: " + std::to_string(maxGain));
+        NS_LOG_UNCOND("        Enb Node Index: " + std::to_string(enbNodeIndex));
+
+        lteHelper->SetEnbAntennaModelType(antennaModel);
+        lteHelper->SetEnbAntennaModelAttribute("Orientation", DoubleValue(orientation));
+        lteHelper->SetEnbAntennaModelAttribute("HorizontalBeamwidth", DoubleValue(horizontalBeamwidth));
+        lteHelper->SetEnbAntennaModelAttribute("MaxGain", DoubleValue(maxGain));
+
+        enbDevs.Add(lteHelper->InstallEnbDevice(enbNodes.Get(enbNodeIndex)));
+        Ptr<Node> enb = enbNodes.Get(enbNodeIndex);
+        Ptr<NetDevice> enbLteDev = enb->GetDevice (0);
+        Ptr<LteEnbNetDevice> enbLteDevice = enbLteDev->GetObject<LteEnbNetDevice> ();
+        uint16_t enbCellId = enbLteDevice->GetCellId ();
+        NS_LOG_UNCOND("        Cell Id: " + std::to_string(enbCellId));
+        }
+        NS_LOG_UNCOND("----------------------------------------------------------------------------------------");
     }
+    
+    //ns3::LteFrStrictAlgorithm works with Absolute Mode Uplink Power Control
+    Config::SetDefault ("ns3::LteUePowerControl::AccumulationEnabled", BooleanValue (false));
 
     ueDevs = lteHelper->InstallUeDevice(ueNodes);
 
@@ -204,10 +337,9 @@ int main(int argc, char *argv[])
     }
 
     //attach UEs to eNBs
-    NS_LOG_UNCOND("Nearest station finding results:");
-    NS_LOG_UNCOND("----------------------------------------------------------------------------------------");
-    for(int i = 0; i < NUMBER_OF_UES; i++){
-        lteHelper->Attach(ueDevs.Get (i), enbDevs.Get(findNearestStationIndexForUe(uesPositions[i], stationsPositions, i)));  
+    for(int i = 0; i < NUMBER_OF_UES; i++) {
+        //lteHelper->Attach(ueDevs.Get (i), enbDevs.Get(findNearestStationIndexForUe(uesPositions[i], stationsPositions, i)*6));  
+        lteHelper->Attach(ueDevs.Get (i));
     }
 
     //install application
@@ -228,16 +360,16 @@ int main(int argc, char *argv[])
         clientApps.Add (ulClient.Install (ueNodes.Get(u)));
     }
 
-    serverApps.Start (Seconds (0.01));
-    clientApps.Start (Seconds (0.02));
+    serverApps.Start (Seconds (0));
+    clientApps.Start (Seconds (5));
 
     Ptr<FlowMonitor> flowMonitor;
     FlowMonitorHelper flowHelper;
     flowMonitor = flowHelper.InstallAll();
 
     clientApps.Stop(MilliSeconds(1000));
-    serverApps.Stop(MilliSeconds(1000));
-    Simulator::Stop(MilliSeconds(1000));
+    serverApps.Stop(MilliSeconds(5000));
+    Simulator::Stop(MilliSeconds(5000));
 
     lteHelper->EnablePhyTraces ();
     lteHelper->EnableMacTraces ();
@@ -245,6 +377,14 @@ int main(int argc, char *argv[])
     lteHelper->EnableUlPhyTraces ();
     lteHelper->EnableUlRxPhyTraces ();
     lteHelper->EnableUlTxPhyTraces ();
+
+    // connect custom trace sinks for RRC connection establishment and handover notification
+    //Config::Connect ("/NodeList/*/DeviceList/*/LteEnbRrc/ConnectionEstablished", MakeCallback (&NotifyConnectionEstablishedEnb));
+    Config::Connect ("/NodeList/*/DeviceList/*/LteUeRrc/ConnectionEstablished", MakeCallback (&NotifyConnectionEstablishedUe));
+    // Config::Connect ("/NodeList/*/DeviceList/*/LteEnbRrc/HandoverStart", MakeCallback (&NotifyHandoverStartEnb));
+    // Config::Connect ("/NodeList/*/DeviceList/*/LteUeRrc/HandoverStart", MakeCallback (&NotifyHandoverStartUe));
+    // Config::Connect ("/NodeList/*/DeviceList/*/LteEnbRrc/HandoverEndOk", MakeCallback (&NotifyHandoverEndOkEnb));
+    // Config::Connect ("/NodeList/*/DeviceList/*/LteUeRrc/HandoverEndOk", MakeCallback (&NotifyHandoverEndOkUe));
     
     Simulator::Run();
 
