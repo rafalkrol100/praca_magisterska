@@ -101,7 +101,7 @@ void NotifyHandoverEndOkEnb(std::string context,
               << std::endl;
 }
 
-std::vector<Vector> calculateStationsPosiotions(double cellRadius, bool isLogEnabled)
+std::vector<Vector> calculateStationsPosiotions(double cellRadius)
 {
     std::vector<Vector> positions;
     positions.push_back(Vector(0.0, 0.0, 0.0));
@@ -112,11 +112,8 @@ std::vector<Vector> calculateStationsPosiotions(double cellRadius, bool isLogEna
     positions.push_back(Vector(-cellRadius, -cellRadius * sqrt(3), 0.0));
     positions.push_back(Vector(cellRadius, -cellRadius * sqrt(3), 0.0));
 
-    if (isLogEnabled)
-    {
-        NS_LOG_UNCOND("Enb's positions table:");
-        NS_LOG_UNCOND("--------------------------------------------------------");
-    }
+    NS_LOG_UNCOND("Enb's positions table:");
+    NS_LOG_UNCOND("--------------------------------------------------------");
 
     for (int i = 0; i < positions.size(); i++)
     {
@@ -125,17 +122,11 @@ std::vector<Vector> calculateStationsPosiotions(double cellRadius, bool isLogEna
         double y = enb.y;
         double z = enb.z;
 
-        if (isLogEnabled)
-        {
-            NS_LOG_UNCOND("| Enb" + std::to_string(i) + " | x: " + std::to_string(x) + " | y: " + std::to_string(y) + " | z: " + std::to_string(z) + " |");
-            NS_LOG_UNCOND("--------------------------------------------------------");
-        }
+        NS_LOG_UNCOND("| Enb" + std::to_string(i) + " | x: " + std::to_string(x) + " | y: " + std::to_string(y) + " | z: " + std::to_string(z) + " |");
+        NS_LOG_UNCOND("--------------------------------------------------------");
     }
 
-    if (isLogEnabled)
-    {
-        NS_LOG_UNCOND(" ");
-    }
+    NS_LOG_UNCOND(" ");
 
     return positions;
 }
@@ -143,7 +134,7 @@ std::vector<Vector> calculateStationsPosiotions(double cellRadius, bool isLogEna
 std::vector<Vector> calculateUesPosiotions(double cellRadius, int numberOfUes)
 {
     std::vector<Vector> positions;
-    std::vector<Vector> enbPositions = calculateStationsPosiotions(cellRadius, true);
+    std::vector<Vector> enbPositions = calculateStationsPosiotions(cellRadius);
     const long max_rand = 1000000L;
     srandom(time(NULL));
 
@@ -258,7 +249,7 @@ int main(int argc, char *argv[])
     Ptr<ListPositionAllocator> enbPositionAlloc = CreateObject<ListPositionAllocator>();
 
     // putting values of coordinates to simulation position array
-    std::vector<Vector> stationsPositions = calculateStationsPosiotions(cellRadius, false);
+    std::vector<Vector> stationsPositions = calculateStationsPosiotions(cellRadius);
     for (int i = 0; i < NUMBER_OF_STATIONS; i++)
     {
         for (int j = 0; j < 6; j++)
@@ -317,7 +308,7 @@ int main(int argc, char *argv[])
     for (int i = 0; i < NUMBER_OF_STATIONS; i++)
     {
         Vector stationPosition = stationsPositions[i];
-        std::string bounds = std::to_string(-3 * cellRadius) + "|" + std::to_string(3 * cellRadius) + "|" + std::to_string(-3 * cellRadius) + "|" + std::to_string(3 * cellRadius); 
+        std::string bounds = std::to_string(-3 * cellRadius) + "|" + std::to_string(3 * cellRadius) + "|" + std::to_string(-3 * cellRadius) + "|" + std::to_string(3 * cellRadius);
         if (i == 0)
         {
             std::string x = std::to_string(stationPosition.x);
