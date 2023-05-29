@@ -101,16 +101,46 @@ void NotifyHandoverEndOkEnb(std::string context,
               << std::endl;
 }
 
-std::vector<Vector> calculateStationsPosiotions(double cellRadius)
+std::vector<Vector> calculateStationsPosiotions(double cellRadius, int numberOfLayers)
 {
     std::vector<Vector> positions;
-    positions.push_back(Vector(0.0, 0.0, 0.0));
-    positions.push_back(Vector(2 * cellRadius, 0.0, 0.0));
-    positions.push_back(Vector(cellRadius, cellRadius * sqrt(3), 0.0));
-    positions.push_back(Vector(-cellRadius, cellRadius * sqrt(3), 0.0));
-    positions.push_back(Vector(-2 * cellRadius, 0.0, 0.0));
-    positions.push_back(Vector(-cellRadius, -cellRadius * sqrt(3), 0.0));
-    positions.push_back(Vector(cellRadius, -cellRadius * sqrt(3), 0.0));
+
+    if (numberOfLayers == 1)
+    {
+        positions.push_back(Vector(0.0, 0.0, 0.0));
+    }
+    else if (numberOfLayers == 2)
+    {
+        positions.push_back(Vector(0.0, 0.0, 0.0));
+        positions.push_back(Vector(2 * cellRadius, 0.0, 0.0));
+        positions.push_back(Vector(cellRadius, cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(-cellRadius, cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(-2 * cellRadius, 0.0, 0.0));
+        positions.push_back(Vector(-cellRadius, -cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(cellRadius, -cellRadius * sqrt(3), 0.0));
+    }
+    else if (numberOfLayers == 3)
+    {
+        positions.push_back(Vector(0.0, 0.0, 0.0));
+        positions.push_back(Vector(2 * cellRadius, 0.0, 0.0));
+        positions.push_back(Vector(cellRadius, cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(-cellRadius, cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(-2 * cellRadius, 0.0, 0.0));
+        positions.push_back(Vector(-cellRadius, -cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(cellRadius, -cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(4 * cellRadius, 0.0, 0.0));
+        positions.push_back(Vector(3 * cellRadius, cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(2 * cellRadius, 2 * sqrt(3) * cellRadius, 0.0));
+        positions.push_back(Vector(0.0, 2 * sqrt(3) * cellRadius, 0.0));
+        positions.push_back(Vector(-2 * cellRadius, 2 * sqrt(3) * cellRadius, 0.0));
+        positions.push_back(Vector(-3 * cellRadius, sqrt(3) * cellRadius, 0.0));
+        positions.push_back(Vector(-4 * cellRadius, 0.0, 0.0));
+        positions.push_back(Vector(-3 * cellRadius, -cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(-2 * cellRadius, -2 * sqrt(3) * cellRadius, 0.0));
+        positions.push_back(Vector(0.0, -2 * sqrt(3) * cellRadius, 0.0));
+        positions.push_back(Vector(2 * cellRadius, -2 * sqrt(3) * cellRadius, 0.0));
+        positions.push_back(Vector(3 * cellRadius, -cellRadius * sqrt(3), 0.0));
+    }
 
     NS_LOG_UNCOND("Enb's positions table:");
     NS_LOG_UNCOND("--------------------------------------------------------");
@@ -123,40 +153,6 @@ std::vector<Vector> calculateStationsPosiotions(double cellRadius)
         double z = enb.z;
 
         NS_LOG_UNCOND("| Enb" + std::to_string(i) + " | x: " + std::to_string(x) + " | y: " + std::to_string(y) + " | z: " + std::to_string(z) + " |");
-        NS_LOG_UNCOND("--------------------------------------------------------");
-    }
-
-    NS_LOG_UNCOND(" ");
-
-    return positions;
-}
-
-std::vector<Vector> calculateUesPosiotions(double cellRadius, int numberOfUes)
-{
-    std::vector<Vector> positions;
-    std::vector<Vector> enbPositions = calculateStationsPosiotions(cellRadius);
-    const long max_rand = 1000000L;
-    srandom(time(NULL));
-
-    NS_LOG_UNCOND("User equipment positions table:");
-    NS_LOG_UNCOND("--------------------------------------------------------");
-
-    for (int i = 0; i < numberOfUes; i++)
-    {
-        int enbIndex = i % 7;
-        Vector enbPosition = enbPositions[enbIndex];
-        double enbX = enbPosition.x;
-        double enbY = enbPosition.y;
-        // bound parameter is used to decrease randomizer bounds to assure that every position is inside of cell radius
-        double bound = (cellRadius * sqrt(2)) / 2;
-
-        // double random_double = lower_bound + (upper_bound - lower_bound) * (random() % max_rand) / max_rand;
-        double x = (enbX - bound) + 2 * bound * (random() % max_rand) / max_rand;
-        double y = (enbY - bound) + 2 * bound * (random() % max_rand) / max_rand;
-        double z = 0.0;
-        positions.push_back(Vector(x, y, z));
-
-        NS_LOG_UNCOND("| Ue" + std::to_string(i) + " | x: " + std::to_string(x) + " | y: " + std::to_string(y) + " | z: " + std::to_string(z) + " |");
         NS_LOG_UNCOND("--------------------------------------------------------");
     }
 
@@ -196,7 +192,12 @@ int main(int argc, char *argv[])
 {
     // parameters
     uint32_t NUMBER_OF_UES = 7;
-    uint32_t NUMBER_OF_STATIONS = 7;
+    uint32_t NUMBER_OF_LAYERS = 2;
+    uint32_t NUMBER_OF_STATIONS = 1 + (6 * (NUMBER_OF_LAYERS - 1));
+    
+    
+    
+    
     double cellRadius = 6000.0;
 
     // create LTE helper
@@ -275,6 +276,7 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < NUMBER_OF_UES; i++)
     {
+        //zmodyfikować dla róznych ilości warstw
         if (i % 7 == 0)
         {
             ueNodes0.Add(ueNodes.Get(i));
@@ -308,6 +310,8 @@ int main(int argc, char *argv[])
     for (int i = 0; i < NUMBER_OF_STATIONS; i++)
     {
         Vector stationPosition = stationsPositions[i];
+        //granice do dostosowania
+        //ifologia do dostosowania z iloscia warstw
         std::string bounds = std::to_string(-3 * cellRadius) + "|" + std::to_string(3 * cellRadius) + "|" + std::to_string(-3 * cellRadius) + "|" + std::to_string(3 * cellRadius);
         if (i == 0)
         {
@@ -428,6 +432,8 @@ int main(int argc, char *argv[])
     NetDeviceContainer ueDevs;
 
     // set up 6 sector enbs
+
+    //ilosc warstw do zmiany
     NS_LOG_UNCOND("Cells configuration: ");
     NS_LOG_UNCOND("----------------------------------------------------------------------------------------");
     for (int i = 0; i < NUMBER_OF_STATIONS; i++)
