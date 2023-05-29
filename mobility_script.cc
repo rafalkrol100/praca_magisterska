@@ -101,16 +101,46 @@ void NotifyHandoverEndOkEnb(std::string context,
               << std::endl;
 }
 
-std::vector<Vector> calculateStationsPosiotions(double cellRadius)
+std::vector<Vector> calculateStationsPosiotions(double cellRadius, int numberOfLayers)
 {
     std::vector<Vector> positions;
-    positions.push_back(Vector(0.0, 0.0, 0.0));
-    positions.push_back(Vector(2 * cellRadius, 0.0, 0.0));
-    positions.push_back(Vector(cellRadius, cellRadius * sqrt(3), 0.0));
-    positions.push_back(Vector(-cellRadius, cellRadius * sqrt(3), 0.0));
-    positions.push_back(Vector(-2 * cellRadius, 0.0, 0.0));
-    positions.push_back(Vector(-cellRadius, -cellRadius * sqrt(3), 0.0));
-    positions.push_back(Vector(cellRadius, -cellRadius * sqrt(3), 0.0));
+
+    if (numberOfLayers == 1)
+    {
+        positions.push_back(Vector(0.0, 0.0, 0.0));
+    }
+    else if (numberOfLayers == 2)
+    {
+        positions.push_back(Vector(0.0, 0.0, 0.0));
+        positions.push_back(Vector(2 * cellRadius, 0.0, 0.0));
+        positions.push_back(Vector(cellRadius, cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(-cellRadius, cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(-2 * cellRadius, 0.0, 0.0));
+        positions.push_back(Vector(-cellRadius, -cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(cellRadius, -cellRadius * sqrt(3), 0.0));
+    }
+    else if (numberOfLayers == 3)
+    {
+        positions.push_back(Vector(0.0, 0.0, 0.0));
+        positions.push_back(Vector(2 * cellRadius, 0.0, 0.0));
+        positions.push_back(Vector(cellRadius, cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(-cellRadius, cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(-2 * cellRadius, 0.0, 0.0));
+        positions.push_back(Vector(-cellRadius, -cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(cellRadius, -cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(4 * cellRadius, 0.0, 0.0));
+        positions.push_back(Vector(3 * cellRadius, cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(2 * cellRadius, 2 * sqrt(3) * cellRadius, 0.0));
+        positions.push_back(Vector(0.0, 2 * sqrt(3) * cellRadius, 0.0));
+        positions.push_back(Vector(-2 * cellRadius, 2 * sqrt(3) * cellRadius, 0.0));
+        positions.push_back(Vector(-3 * cellRadius, sqrt(3) * cellRadius, 0.0));
+        positions.push_back(Vector(-4 * cellRadius, 0.0, 0.0));
+        positions.push_back(Vector(-3 * cellRadius, -cellRadius * sqrt(3), 0.0));
+        positions.push_back(Vector(-2 * cellRadius, -2 * sqrt(3) * cellRadius, 0.0));
+        positions.push_back(Vector(0.0, -2 * sqrt(3) * cellRadius, 0.0));
+        positions.push_back(Vector(2 * cellRadius, -2 * sqrt(3) * cellRadius, 0.0));
+        positions.push_back(Vector(3 * cellRadius, -cellRadius * sqrt(3), 0.0));
+    }
 
     NS_LOG_UNCOND("Enb's positions table:");
     NS_LOG_UNCOND("--------------------------------------------------------");
@@ -123,40 +153,6 @@ std::vector<Vector> calculateStationsPosiotions(double cellRadius)
         double z = enb.z;
 
         NS_LOG_UNCOND("| Enb" + std::to_string(i) + " | x: " + std::to_string(x) + " | y: " + std::to_string(y) + " | z: " + std::to_string(z) + " |");
-        NS_LOG_UNCOND("--------------------------------------------------------");
-    }
-
-    NS_LOG_UNCOND(" ");
-
-    return positions;
-}
-
-std::vector<Vector> calculateUesPosiotions(double cellRadius, int numberOfUes)
-{
-    std::vector<Vector> positions;
-    std::vector<Vector> enbPositions = calculateStationsPosiotions(cellRadius);
-    const long max_rand = 1000000L;
-    srandom(time(NULL));
-
-    NS_LOG_UNCOND("User equipment positions table:");
-    NS_LOG_UNCOND("--------------------------------------------------------");
-
-    for (int i = 0; i < numberOfUes; i++)
-    {
-        int enbIndex = i % 7;
-        Vector enbPosition = enbPositions[enbIndex];
-        double enbX = enbPosition.x;
-        double enbY = enbPosition.y;
-        // bound parameter is used to decrease randomizer bounds to assure that every position is inside of cell radius
-        double bound = (cellRadius * sqrt(2)) / 2;
-
-        // double random_double = lower_bound + (upper_bound - lower_bound) * (random() % max_rand) / max_rand;
-        double x = (enbX - bound) + 2 * bound * (random() % max_rand) / max_rand;
-        double y = (enbY - bound) + 2 * bound * (random() % max_rand) / max_rand;
-        double z = 0.0;
-        positions.push_back(Vector(x, y, z));
-
-        NS_LOG_UNCOND("| Ue" + std::to_string(i) + " | x: " + std::to_string(x) + " | y: " + std::to_string(y) + " | z: " + std::to_string(z) + " |");
         NS_LOG_UNCOND("--------------------------------------------------------");
     }
 
@@ -188,6 +184,23 @@ uint32_t findNearestStationIndexForUe(Vector uePosition, std::vector<Vector> sta
     return indexOfNearestStation;
 }
 
+void installMobility(Vector stationPosition, double cellRadius, std::string bounds, MobilityHelper ueMobility, NodeContainer ueNodes)
+{
+    std::string x = std::to_string(stationPosition.x);
+    std::string y = std::to_string(stationPosition.y);
+    std::string cellRadiusString = std::to_string(cellRadius);
+    ueMobility.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
+                                    "X", StringValue(x),
+                                    "Y", StringValue(y),
+                                    "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+    ueMobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
+                                "Mode", StringValue("Time"),
+                                "Time", StringValue("2s"),
+                                "Speed", StringValue("ns3::ConstantRandomVariable[Constant=1.0]"),
+                                "Bounds", StringValue(bounds));
+    ueMobility.Install(ueNodes);
+}
+
 void handler()
 {
 }
@@ -196,8 +209,10 @@ int main(int argc, char *argv[])
 {
     // parameters
     uint32_t NUMBER_OF_UES = 7;
-    uint32_t NUMBER_OF_STATIONS = 7;
+    uint32_t NUMBER_OF_LAYERS = 3;
+    uint32_t NUMBER_OF_STATIONS = 1 + (6 * (NUMBER_OF_LAYERS - 1)) + (uint32_t)(NUMBER_OF_LAYERS / 3) * 6;
     double cellRadius = 6000.0;
+    uint32_t NUMBER_OF_SECTORS = 6;
 
     // create LTE helper
     Ptr<LteHelper> lteHelper = CreateObject<LteHelper>();
@@ -241,7 +256,7 @@ int main(int argc, char *argv[])
 
     // nodes containers for eNBs and UEs
     NodeContainer enbNodes;
-    enbNodes.Create(NUMBER_OF_STATIONS * 6);
+    enbNodes.Create(NUMBER_OF_STATIONS * NUMBER_OF_SECTORS);
     NodeContainer ueNodes;
     ueNodes.Create(NUMBER_OF_UES);
 
@@ -249,10 +264,10 @@ int main(int argc, char *argv[])
     Ptr<ListPositionAllocator> enbPositionAlloc = CreateObject<ListPositionAllocator>();
 
     // putting values of coordinates to simulation position array
-    std::vector<Vector> stationsPositions = calculateStationsPosiotions(cellRadius);
+    std::vector<Vector> stationsPositions = calculateStationsPosiotions(cellRadius, NUMBER_OF_LAYERS);
     for (int i = 0; i < NUMBER_OF_STATIONS; i++)
     {
-        for (int j = 0; j < 6; j++)
+        for (int j = 0; j < NUMBER_OF_SECTORS; j++)
         {
             enbPositionAlloc->Add(stationsPositions[i]);
         }
@@ -265,6 +280,7 @@ int main(int argc, char *argv[])
     enbMobility.Install(enbNodes);
 
     MobilityHelper ueMobility;
+    std::vector<NodeContainer> ueMobilityVector;
     NodeContainer ueNodes0;
     NodeContainer ueNodes1;
     NodeContainer ueNodes2;
@@ -272,155 +288,195 @@ int main(int argc, char *argv[])
     NodeContainer ueNodes4;
     NodeContainer ueNodes5;
     NodeContainer ueNodes6;
+    NodeContainer ueNodes7;
+    NodeContainer ueNodes8;
+    NodeContainer ueNodes9;
+    NodeContainer ueNodes10;
+    NodeContainer ueNodes11;
+    NodeContainer ueNodes12;
+    NodeContainer ueNodes13;
+    NodeContainer ueNodes14;
+    NodeContainer ueNodes15;
+    NodeContainer ueNodes16;
+    NodeContainer ueNodes17;
+    NodeContainer ueNodes18;
 
     for (int i = 0; i < NUMBER_OF_UES; i++)
     {
-        if (i % 7 == 0)
+        if (NUMBER_OF_LAYERS == 1)
         {
             ueNodes0.Add(ueNodes.Get(i));
         }
-        if (i % 7 == 1)
+        if (NUMBER_OF_LAYERS == 2)
         {
-            ueNodes1.Add(ueNodes.Get(i));
+            if (i % 7 == 0)
+            {
+                ueNodes0.Add(ueNodes.Get(i));
+            }
+            if (i % 7 == 1)
+            {
+                ueNodes1.Add(ueNodes.Get(i));
+            }
+            if (i % 7 == 2)
+            {
+                ueNodes2.Add(ueNodes.Get(i));
+            }
+            if (i % 7 == 3)
+            {
+                ueNodes3.Add(ueNodes.Get(i));
+            }
+            if (i % 7 == 4)
+            {
+                ueNodes4.Add(ueNodes.Get(i));
+            }
+            if (i % 7 == 5)
+            {
+                ueNodes5.Add(ueNodes.Get(i));
+            }
+            if (i % 7 == 6)
+            {
+                ueNodes6.Add(ueNodes.Get(i));
+            }
         }
-        if (i % 7 == 2)
+        if (NUMBER_OF_LAYERS == 3)
         {
-            ueNodes2.Add(ueNodes.Get(i));
-        }
-        if (i % 7 == 3)
-        {
-            ueNodes3.Add(ueNodes.Get(i));
-        }
-        if (i % 7 == 4)
-        {
-            ueNodes4.Add(ueNodes.Get(i));
-        }
-        if (i % 7 == 5)
-        {
-            ueNodes5.Add(ueNodes.Get(i));
-        }
-        if (i % 7 == 6)
-        {
-            ueNodes6.Add(ueNodes.Get(i));
+            if (i % 19 == 0)
+            {
+                ueNodes0.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 1)
+            {
+                ueNodes1.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 2)
+            {
+                ueNodes2.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 3)
+            {
+                ueNodes3.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 4)
+            {
+                ueNodes4.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 5)
+            {
+                ueNodes5.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 6)
+            {
+                ueNodes6.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 7)
+            {
+                ueNodes7.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 8)
+            {
+                ueNodes8.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 9)
+            {
+                ueNodes9.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 10)
+            {
+                ueNodes10.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 11)
+            {
+                ueNodes11.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 12)
+            {
+                ueNodes12.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 13)
+            {
+                ueNodes13.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 14)
+            {
+                ueNodes14.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 15)
+            {
+                ueNodes15.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 16)
+            {
+                ueNodes16.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 17)
+            {
+                ueNodes17.Add(ueNodes.Get(i));
+            }
+            if (i % 19 == 18)
+            {
+                ueNodes18.Add(ueNodes.Get(i));
+            }
         }
     }
+
+    if (NUMBER_OF_LAYERS == 1)
+    {
+        ueMobilityVector.push_back(ueNodes0);
+    }
+    if (NUMBER_OF_LAYERS == 2)
+    {
+        ueMobilityVector.push_back(ueNodes0);
+        ueMobilityVector.push_back(ueNodes1);
+        ueMobilityVector.push_back(ueNodes2);
+        ueMobilityVector.push_back(ueNodes3);
+        ueMobilityVector.push_back(ueNodes4);
+        ueMobilityVector.push_back(ueNodes5);
+        ueMobilityVector.push_back(ueNodes6);
+    }
+    if (NUMBER_OF_LAYERS == 3)
+    {
+        ueMobilityVector.push_back(ueNodes0);
+        ueMobilityVector.push_back(ueNodes1);
+        ueMobilityVector.push_back(ueNodes2);
+        ueMobilityVector.push_back(ueNodes3);
+        ueMobilityVector.push_back(ueNodes4);
+        ueMobilityVector.push_back(ueNodes5);
+        ueMobilityVector.push_back(ueNodes6);
+        ueMobilityVector.push_back(ueNodes7);
+        ueMobilityVector.push_back(ueNodes8);
+        ueMobilityVector.push_back(ueNodes9);
+        ueMobilityVector.push_back(ueNodes10);
+        ueMobilityVector.push_back(ueNodes11);
+        ueMobilityVector.push_back(ueNodes12);
+        ueMobilityVector.push_back(ueNodes13);
+        ueMobilityVector.push_back(ueNodes14);
+        ueMobilityVector.push_back(ueNodes15);
+        ueMobilityVector.push_back(ueNodes16);
+        ueMobilityVector.push_back(ueNodes17);
+        ueMobilityVector.push_back(ueNodes18);
+    }
+
+    int modifier = 0;
+    if (NUMBER_OF_LAYERS == 1)
+    {
+        modifier = 1;
+    }
+    else if (NUMBER_OF_LAYERS == 2)
+    {
+        modifier = 3;
+    }
+    else if (NUMBER_OF_LAYERS == 3)
+    {
+        modifier = 5;
+    }
+
+    std::string bounds = std::to_string(-modifier * cellRadius) + "|" + std::to_string(modifier * cellRadius) + "|" + std::to_string(-modifier * cellRadius) + "|" + std::to_string(modifier * cellRadius);
 
     for (int i = 0; i < NUMBER_OF_STATIONS; i++)
     {
         Vector stationPosition = stationsPositions[i];
-        std::string bounds = std::to_string(-3 * cellRadius) + "|" + std::to_string(3 * cellRadius) + "|" + std::to_string(-3 * cellRadius) + "|" + std::to_string(3 * cellRadius);
-        if (i == 0)
-        {
-            std::string x = std::to_string(stationPosition.x);
-            std::string y = std::to_string(stationPosition.y);
-            std::string cellRadiusString = std::to_string(cellRadius);
-            ueMobility.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
-                                            "X", StringValue(x),
-                                            "Y", StringValue(y),
-                                            "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
-            ueMobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
-                                        "Mode", StringValue("Time"),
-                                        "Time", StringValue("2s"),
-                                        "Speed", StringValue("ns3::ConstantRandomVariable[Constant=1.0]"),
-                                        "Bounds", StringValue(bounds));
-            ueMobility.Install(ueNodes0);
-        }
-        if (i == 1)
-        {
-            std::string x = std::to_string(stationPosition.x);
-            std::string y = std::to_string(stationPosition.y);
-            std::string cellRadiusString = std::to_string(cellRadius);
-            ueMobility.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
-                                            "X", StringValue(x),
-                                            "Y", StringValue(y),
-                                            "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
-            ueMobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
-                                        "Mode", StringValue("Time"),
-                                        "Time", StringValue("2s"),
-                                        "Speed", StringValue("ns3::ConstantRandomVariable[Constant=1.0]"),
-                                        "Bounds", StringValue(bounds));
-            ueMobility.Install(ueNodes1);
-        }
-        if (i == 2)
-        {
-            std::string x = std::to_string(stationPosition.x);
-            std::string y = std::to_string(stationPosition.y);
-            std::string cellRadiusString = std::to_string(cellRadius);
-            ueMobility.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
-                                            "X", StringValue(x),
-                                            "Y", StringValue(y),
-                                            "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
-            ueMobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
-                                        "Mode", StringValue("Time"),
-                                        "Time", StringValue("2s"),
-                                        "Speed", StringValue("ns3::ConstantRandomVariable[Constant=1.0]"),
-                                        "Bounds", StringValue(bounds));
-            ueMobility.Install(ueNodes2);
-        }
-        if (i == 3)
-        {
-            std::string x = std::to_string(stationPosition.x);
-            std::string y = std::to_string(stationPosition.y);
-            std::string cellRadiusString = std::to_string(cellRadius);
-            ueMobility.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
-                                            "X", StringValue(x),
-                                            "Y", StringValue(y),
-                                            "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
-            ueMobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
-                                        "Mode", StringValue("Time"),
-                                        "Time", StringValue("2s"),
-                                        "Speed", StringValue("ns3::ConstantRandomVariable[Constant=1.0]"),
-                                        "Bounds", StringValue(bounds));
-            ueMobility.Install(ueNodes3);
-        }
-        if (i == 4)
-        {
-            std::string x = std::to_string(stationPosition.x);
-            std::string y = std::to_string(stationPosition.y);
-            std::string cellRadiusString = std::to_string(cellRadius);
-            ueMobility.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
-                                            "X", StringValue(x),
-                                            "Y", StringValue(y),
-                                            "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
-            ueMobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
-                                        "Mode", StringValue("Time"),
-                                        "Time", StringValue("2s"),
-                                        "Speed", StringValue("ns3::ConstantRandomVariable[Constant=1.0]"),
-                                        "Bounds", StringValue(bounds));
-            ueMobility.Install(ueNodes4);
-        }
-        if (i == 5)
-        {
-            std::string x = std::to_string(stationPosition.x);
-            std::string y = std::to_string(stationPosition.y);
-            std::string cellRadiusString = std::to_string(cellRadius);
-            ueMobility.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
-                                            "X", StringValue(x),
-                                            "Y", StringValue(y),
-                                            "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
-            ueMobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
-                                        "Mode", StringValue("Time"),
-                                        "Time", StringValue("2s"),
-                                        "Speed", StringValue("ns3::ConstantRandomVariable[Constant=1.0]"),
-                                        "Bounds", StringValue(bounds));
-            ueMobility.Install(ueNodes5);
-        }
-        if (i == 6)
-        {
-            std::string x = std::to_string(stationPosition.x);
-            std::string y = std::to_string(stationPosition.y);
-            std::string cellRadiusString = std::to_string(cellRadius);
-            ueMobility.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
-                                            "X", StringValue(x),
-                                            "Y", StringValue(y),
-                                            "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
-            ueMobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
-                                        "Mode", StringValue("Time"),
-                                        "Time", StringValue("2s"),
-                                        "Speed", StringValue("ns3::ConstantRandomVariable[Constant=1.0]"),
-                                        "Bounds", StringValue(bounds));
-            ueMobility.Install(ueNodes6);
-        }
+
+        installMobility(stationPosition, cellRadius, bounds, ueMobility, ueMobilityVector[i]);
     }
 
     // instal devices
@@ -434,7 +490,7 @@ int main(int argc, char *argv[])
     {
         NS_LOG_UNCOND("Enb" + std::to_string(i) + ": ");
 
-        for (int j = 0; j < 6; j++)
+        for (int j = 0; j < NUMBER_OF_SECTORS; j++)
         {
             NS_LOG_UNCOND("    Sector: " + std::to_string(j));
             // set up strict frequency reuse model
@@ -447,10 +503,10 @@ int main(int argc, char *argv[])
             lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandwidth", UintegerValue(6));
 
             std::string antennaModel = "ns3::CosineAntennaModel";
-            double orientation = 0 + j * 60;
-            double horizontalBeamwidth = 60;
+            double orientation = 0 + j * (360/NUMBER_OF_SECTORS);
+            double horizontalBeamwidth = 360/NUMBER_OF_SECTORS;
             double maxGain = 0.0;
-            int enbNodeIndex = i * 6 + j;
+            int enbNodeIndex = i * NUMBER_OF_SECTORS + j;
 
             NS_LOG_UNCOND("        Antenna Model: " + antennaModel);
             NS_LOG_UNCOND("        Orientation: " + std::to_string(orientation));
@@ -493,6 +549,7 @@ int main(int argc, char *argv[])
     }
 
     // attach UEs to eNBs
+    // std::vector<Vector> uesPositions = calculateUesPosiotions(cellRadius, NUMBER_OF_UES);
     for (int i = 0; i < NUMBER_OF_UES; i++)
     {
         // lteHelper->Attach(ueDevs.Get (i), enbDevs.Get(findNearestStationIndexForUe(uesPositions[i], stationsPositions, i)*6));
