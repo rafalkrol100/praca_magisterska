@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
     uint32_t NUMBER_OF_UES = 3;
     uint32_t NUMBER_OF_LAYERS = 2;
     uint32_t NUMBER_OF_STATIONS = 1 + (6 * (NUMBER_OF_LAYERS - 1)) + (uint32_t)(NUMBER_OF_LAYERS / 3) * 6;
-    double cellRadius = 600.0;
+    double cellRadius = 120.0;
     uint32_t NUMBER_OF_SECTORS = 6;
 
     // create LTE helper
@@ -235,6 +235,7 @@ int main(int argc, char *argv[])
     // set basic LTE attributes
     Config::SetDefault("ns3::LteUePowerControl::Pcmin", DoubleValue(23.0));
     Config::SetDefault("ns3::LteUePowerControl::Pcmax", DoubleValue(23.0));
+    Config::SetDefault("ns3::LteEnbRrc::DefaultTransmissionMode", UintegerValue(1)); // MIMO Tx diversity(1 layer)
     lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(50));
     lteHelper->SetEnbDeviceAttribute("Mtu", UintegerValue(1500));
     lteHelper->SetUeDeviceAttribute("Mtu", UintegerValue(1500));
@@ -594,16 +595,16 @@ int main(int argc, char *argv[])
         clientApps.Add(ulClient.Install(ueNodes.Get(u)));
     }
 
-    serverApps.Start(Seconds(0));
-    clientApps.Start(Seconds(0));
+    serverApps.Start(Seconds(0.5));
+    clientApps.Start(Seconds(1));
 
     Ptr<FlowMonitor> flowMonitor;
     FlowMonitorHelper flowHelper;
     flowMonitor = flowHelper.InstallAll();
 
-    clientApps.Stop(MilliSeconds(3000));
+    clientApps.Stop(MilliSeconds(2500));
     serverApps.Stop(MilliSeconds(3000));
-    Simulator::Stop(MilliSeconds(3000));
+    Simulator::Stop(MilliSeconds(3500));
 
     // lteHelper->EnablePhyTraces();
     // lteHelper->EnableMacTraces();
@@ -618,14 +619,14 @@ int main(int argc, char *argv[])
 
     // connect custom trace sinks for RRC connection establishment and handover notification
     // Config::Connect ("/NodeList/*/DeviceList/*/LteEnbRrc/ConnectionEstablished", MakeCallback (&NotifyConnectionEstablishedEnb));
-    //Config::Connect("/NodeList/*/DeviceList/*/LteUeRrc/ConnectionEstablished", MakeCallback(&NotifyConnectionEstablishedUe));
+    Config::Connect("/NodeList/*/DeviceList/*/LteUeRrc/ConnectionEstablished", MakeCallback(&NotifyConnectionEstablishedUe));
     // Config::Connect ("/NodeList/*/DeviceList/*/LteEnbRrc/HandoverStart", MakeCallback (&NotifyHandoverStartEnb));
     // Config::Connect ("/NodeList/*/DeviceList/*/LteUeRrc/HandoverStart", MakeCallback (&NotifyHandoverStartUe));
     // Config::Connect ("/NodeList/*/DeviceList/*/LteEnbRrc/HandoverEndOk", MakeCallback (&NotifyHandoverEndOkEnb));
     // Config::Connect ("/NodeList/*/DeviceList/*/LteUeRrc/HandoverEndOk", MakeCallback (&NotifyHandoverEndOkUe));
 
-    //Config::Connect("/NodeList/*/$ns3::MobilityModel/CourseChange", MakeCallback(&CourseChange));
-    Config::Connect("/NodeList/*/DeviceList/*/$ns3::LteNetDevice/$ns3::LteUeNetDevice/ComponentCarrierMapUe/*/LteUePhy/ReportUlPhyResourceBlocks", MakeCallback(&NotifyResourceBlocks));
+    Config::Connect("/NodeList/*/$ns3::MobilityModel/CourseChange", MakeCallback(&CourseChange));
+    //Config::Connect("/NodeList/*/DeviceList/*/$ns3::LteNetDevice/$ns3::LteUeNetDevice/ComponentCarrierMapUe/*/LteUePhy/ReportUlPhyResourceBlocks", MakeCallback(&NotifyResourceBlocks));
 
     Simulator::Schedule(Seconds(1), &handler);
 

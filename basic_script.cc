@@ -136,16 +136,16 @@ int main(int argc, char *argv[])
         clientApps.Add (ulClient.Install (ueNodes.Get(u)));
     }
 
-    serverApps.Start (Seconds (0.01));
-    clientApps.Start (Seconds (0.02));
+    serverApps.Start (Seconds (1));
+    clientApps.Start (Seconds (2));
 
     Ptr<FlowMonitor> flowMonitor;
     FlowMonitorHelper flowHelper;
     flowMonitor = flowHelper.InstallAll();
 
-    clientApps.Stop(MilliSeconds(1000));
-    serverApps.Stop(MilliSeconds(1000));
-    Simulator::Stop(MilliSeconds(1000));
+    clientApps.Stop(MilliSeconds(3000));
+    serverApps.Stop(MilliSeconds(10000));
+    Simulator::Stop(MilliSeconds(10000));
 
     lteHelper->EnablePhyTraces ();
     lteHelper->EnableMacTraces ();
