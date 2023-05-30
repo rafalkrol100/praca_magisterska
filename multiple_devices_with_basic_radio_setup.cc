@@ -367,7 +367,7 @@ int main(int argc, char *argv[])
     FlowMonitorHelper flowHelper;
     flowMonitor = flowHelper.InstallAll();
 
-    clientApps.Stop(MilliSeconds(1000));
+    clientApps.Stop(MilliSeconds(5000));
     serverApps.Stop(MilliSeconds(5000));
     Simulator::Stop(MilliSeconds(5000));
 

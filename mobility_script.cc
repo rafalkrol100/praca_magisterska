@@ -22,7 +22,7 @@ CourseChange(std::string foo, Ptr<const MobilityModel> mobility)
     Vector vel = mobility->GetVelocity();
     std::cout << Simulator::Now() << ", model=" << mobility << ", POS: x=" << pos.x << ", y=" << pos.y
               << ", z=" << pos.z << "; VEL: x=" << vel.x << ", y=" << vel.y
-              << ", z=" << vel.z << std::endl;
+              << ", z=" << vel.z << foo << std::endl;
 }
 
 void NotifyConnectionEstablishedUe(std::string context,
@@ -36,6 +36,19 @@ void NotifyConnectionEstablishedUe(std::string context,
               << " with RNTI " << rnti
               << std::endl;
 }
+
+void NotifyResourceBlocks(std::string context,
+                          uint16_t rnti,
+                          const std::vector<int> &rbs)
+{
+    std::cout << context << " rnti: " << rnti << " rb: " << rbs[0] << std::endl;
+}
+
+// void NotifyResourceBlocks(uint16_t rnti,
+//                           const std::vector<int> &rbs)
+// {
+//     std::cout << "rnti: " << rnti << "rb: " << rbs[0];
+// }
 
 void NotifyHandoverStartUe(std::string context,
                            uint64_t imsi,
@@ -203,15 +216,17 @@ void installMobility(Vector stationPosition, double cellRadius, std::string boun
 
 void handler()
 {
+    // uint8_t tpc = LteFrStrictAlgorithm::DoGetTpc (1);
+    // std::cout << "tpc" << tpc;
 }
 
 int main(int argc, char *argv[])
 {
     // parameters
-    uint32_t NUMBER_OF_UES = 7;
-    uint32_t NUMBER_OF_LAYERS = 3;
+    uint32_t NUMBER_OF_UES = 3;
+    uint32_t NUMBER_OF_LAYERS = 2;
     uint32_t NUMBER_OF_STATIONS = 1 + (6 * (NUMBER_OF_LAYERS - 1)) + (uint32_t)(NUMBER_OF_LAYERS / 3) * 6;
-    double cellRadius = 6000.0;
+    double cellRadius = 120.0;
     uint32_t NUMBER_OF_SECTORS = 6;
 
     // create LTE helper
@@ -220,9 +235,15 @@ int main(int argc, char *argv[])
     // set basic LTE attributes
     Config::SetDefault("ns3::LteUePowerControl::Pcmin", DoubleValue(23.0));
     Config::SetDefault("ns3::LteUePowerControl::Pcmax", DoubleValue(23.0));
+    Config::SetDefault("ns3::LteEnbRrc::DefaultTransmissionMode", UintegerValue(1)); // MIMO Tx diversity(1 layer)
     lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(50));
     lteHelper->SetEnbDeviceAttribute("Mtu", UintegerValue(1500));
     lteHelper->SetUeDeviceAttribute("Mtu", UintegerValue(1500));
+
+    lteHelper->SetPathlossModelType(TypeId::LookupByName("ns3::LogDistancePropagationLossModel"));
+    lteHelper->SetPathlossModelAttribute("Exponent", DoubleValue(3.9));
+    lteHelper->SetPathlossModelAttribute("ReferenceLoss", DoubleValue(38.57)); // ref. loss in dB at 1m for 2.025GHz
+    lteHelper->SetPathlossModelAttribute("ReferenceDistance", DoubleValue(1));
 
     // create EPC helper
     Ptr<PointToPointEpcHelper> epcHelper = CreateObject<PointToPointEpcHelper>();
@@ -503,8 +524,8 @@ int main(int argc, char *argv[])
             lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandwidth", UintegerValue(6));
 
             std::string antennaModel = "ns3::CosineAntennaModel";
-            double orientation = 0 + j * (360/NUMBER_OF_SECTORS);
-            double horizontalBeamwidth = 360/NUMBER_OF_SECTORS;
+            double orientation = 0 + j * (360 / NUMBER_OF_SECTORS);
+            double horizontalBeamwidth = 360 / NUMBER_OF_SECTORS;
             double maxGain = 0.0;
             int enbNodeIndex = i * NUMBER_OF_SECTORS + j;
 
@@ -574,23 +595,27 @@ int main(int argc, char *argv[])
         clientApps.Add(ulClient.Install(ueNodes.Get(u)));
     }
 
-    serverApps.Start(Seconds(0));
-    clientApps.Start(Seconds(5));
+    serverApps.Start(Seconds(0.5));
+    clientApps.Start(Seconds(1));
 
     Ptr<FlowMonitor> flowMonitor;
     FlowMonitorHelper flowHelper;
     flowMonitor = flowHelper.InstallAll();
 
-    clientApps.Stop(MilliSeconds(1000));
-    serverApps.Stop(MilliSeconds(5000));
-    Simulator::Stop(MilliSeconds(5000));
+    clientApps.Stop(MilliSeconds(2500));
+    serverApps.Stop(MilliSeconds(3000));
+    Simulator::Stop(MilliSeconds(3500));
 
-    lteHelper->EnablePhyTraces();
-    lteHelper->EnableMacTraces();
-    lteHelper->EnableRlcTraces();
-    lteHelper->EnableUlPhyTraces();
-    lteHelper->EnableUlRxPhyTraces();
-    lteHelper->EnableUlTxPhyTraces();
+    // lteHelper->EnablePhyTraces();
+    // lteHelper->EnableMacTraces();
+    // lteHelper->EnableRlcTraces();
+    // lteHelper->EnableUlPhyTraces();
+    // lteHelper->EnableUlRxPhyTraces();
+    // lteHelper->EnableUlTxPhyTraces();
+
+    lteHelper->EnableTraces();
+    //lteHelper->EnableLogComponents();
+
 
     // connect custom trace sinks for RRC connection establishment and handover notification
     // Config::Connect ("/NodeList/*/DeviceList/*/LteEnbRrc/ConnectionEstablished", MakeCallback (&NotifyConnectionEstablishedEnb));
@@ -601,6 +626,9 @@ int main(int argc, char *argv[])
     // Config::Connect ("/NodeList/*/DeviceList/*/LteUeRrc/HandoverEndOk", MakeCallback (&NotifyHandoverEndOkUe));
 
     Config::Connect("/NodeList/*/$ns3::MobilityModel/CourseChange", MakeCallback(&CourseChange));
+    //Config::Connect("/NodeList/*/DeviceList/*/$ns3::LteNetDevice/$ns3::LteUeNetDevice/ComponentCarrierMapUe/*/LteUePhy/ReportUlPhyResourceBlocks", MakeCallback(&NotifyResourceBlocks));
+
+    Simulator::Schedule(Seconds(1), &handler);
 
     AsciiTraceHelper ascii;
     MobilityHelper::EnableAsciiAll(ascii.CreateFileStream("mobility-trace-example.mob"));
