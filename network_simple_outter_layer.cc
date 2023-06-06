@@ -180,19 +180,21 @@ uint32_t findNearestStationIndexForUe(Vector uePosition, std::vector<Vector> sta
     return indexOfNearestStation;
 }
 
-void installMobility(Vector stationPosition, double cellRadius, std::string bounds, MobilityHelper ueMobility, NodeContainer ueNodes)
+void installMobility(Vector stationPosition, double cellRadius, std::string bounds, MobilityHelper ueMobility, NodeContainer ueNodes, double speed, int time)
 {
     std::string x = std::to_string(stationPosition.x);
     std::string y = std::to_string(stationPosition.y);
     std::string cellRadiusString = std::to_string(cellRadius);
+    std::string speedString = std::to_string(speed);
+    std::string timeString = std::to_string(time);
     ueMobility.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                     "X", StringValue(x),
                                     "Y", StringValue(y),
                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
     ueMobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
                                 "Mode", StringValue("Time"),
-                                "Time", StringValue("2s"),
-                                "Speed", StringValue("ns3::ConstantRandomVariable[Constant=1.0]"),
+                                "Time", StringValue(timeString + "s"),
+                                "Speed", StringValue("ns3::ConstantRandomVariable[Constant=" + speedString + "1.0]"),
                                 "Bounds", StringValue(bounds));
     ueMobility.Install(ueNodes);
 }
@@ -213,6 +215,8 @@ int main(int argc, char *argv[])
     double cellRadius = 120.0;
     uint32_t NUMBER_OF_SECTORS = 6;
     bool isCompEnabled = true;
+    int time = 10;
+    double speed = 3;
 
     // create LTE helper
     Ptr<LteHelper> lteHelper = CreateObject<LteHelper>();
@@ -224,9 +228,9 @@ int main(int argc, char *argv[])
         Config::SetDefault("ns3::LteEnbRrc::DefaultTransmissionMode", UintegerValue(1)); // MIMO Tx diversity(1 layer)
     }
 
-    Config::SetDefault("ns3::LteUePowerControl::Pcmin", DoubleValue(23.0));
-    Config::SetDefault("ns3::LteUePowerControl::Pcmax", DoubleValue(23.0));
-    lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(50));
+    Config::SetDefault("ns3::LteUePowerControl::Pcmin", DoubleValue(0));
+    Config::SetDefault("ns3::LteUePowerControl::Pcmax", DoubleValue(33.0));
+    lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(100));
     lteHelper->SetEnbDeviceAttribute("Mtu", UintegerValue(1500));
     lteHelper->SetUeDeviceAttribute("Mtu", UintegerValue(1500));
 
@@ -469,17 +473,17 @@ int main(int argc, char *argv[])
                 NS_LOG_UNCOND("    Sector: " + std::to_string(j));
                 // set up strict frequency reuse model
                 lteHelper->SetFfrAlgorithmType("ns3::LteFrStrictAlgorithm");
-                lteHelper->SetFfrAlgorithmAttribute("DlCommonSubBandwidth", UintegerValue(6));
                 lteHelper->SetFfrAlgorithmAttribute("UlCommonSubBandwidth", UintegerValue(6));
-                lteHelper->SetFfrAlgorithmAttribute("DlEdgeSubBandOffset", UintegerValue(6));
-                lteHelper->SetFfrAlgorithmAttribute("DlEdgeSubBandwidth", UintegerValue(6));
                 lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandOffset", UintegerValue(6));
                 lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandwidth", UintegerValue(6));
+                lteHelper->SetFfrAlgorithmAttribute("DlCommonSubBandwidth", UintegerValue(6));
+                lteHelper->SetFfrAlgorithmAttribute("DlEdgeSubBandOffset", UintegerValue(0));
+                lteHelper->SetFfrAlgorithmAttribute("DlEdgeSubBandwidth", UintegerValue(6));
 
                 std::string antennaModel = "ns3::CosineAntennaModel";
                 double orientation = 0 + j * (360 / NUMBER_OF_SECTORS);
                 double horizontalBeamwidth = 360 / NUMBER_OF_SECTORS;
-                double maxGain = 0.0;
+                double maxGain = 17.0;
                 int enbNodeIndex = i * NUMBER_OF_SECTORS + j;
 
                 NS_LOG_UNCOND("        Antenna Model: " + antennaModel);
