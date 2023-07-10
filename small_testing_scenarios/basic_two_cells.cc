@@ -20,12 +20,9 @@ using namespace ns3;
 int main(int argc, char *argv[])
 {
     // parameters
-    int numberOfUEsPerCell = 5;
-    double cellRadius = 100;
+    int numberOfUEsPerCell = 20;
+    double cellRadius = 5;
     NS_LOG_UNCOND("Number of UEs per cell: " + std::to_string(numberOfUEsPerCell) + "; Cell Radius: " + std::to_string(cellRadius));
-
-    ConfigStore inputConfig;
-    inputConfig.ConfigureDefaults ();
 
     // create LTE helper
     Ptr<LteHelper> lteHelper = CreateObject<LteHelper>();
@@ -34,7 +31,7 @@ int main(int argc, char *argv[])
     lteHelper->SetPathlossModelAttribute("Exponent", DoubleValue(3.9));
     lteHelper->SetPathlossModelAttribute("ReferenceLoss", DoubleValue(38.57)); // ref. loss in dB at 1m for 2.025GHz
     lteHelper->SetPathlossModelAttribute("ReferenceDistance", DoubleValue(1));
-    lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(100));
+    lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(6));
 
     // create EPC helper
     Ptr<PointToPointEpcHelper> epcHelper = CreateObject<PointToPointEpcHelper>();
@@ -93,10 +90,7 @@ int main(int argc, char *argv[])
     //Ptr<ListPositionAllocator> uePositionAlloc = CreateObject<ListPositionAllocator>();
 
     // putting values of coordinates to simulation position array
-    // for (int i = 0; i < 2; i++)
-    // {
-    //     enbPositionAlloc->Add(Vector((double) (cellRadius * 2 * i), 0.0, 0.0));
-    // }
+   
     enbPositionAlloc->Add(Vector(0.0, 0.0, 0.0));
     enbPositionAlloc->Add(Vector(2 * cellRadius, 0.0, 0.0));
 
@@ -200,17 +194,6 @@ int main(int argc, char *argv[])
     lteHelper->EnableUlPhyTraces();
     lteHelper->EnableUlRxPhyTraces();
     lteHelper->EnableUlTxPhyTraces();
-
-     // for LTE-only simulations always use /ChannelList/0 which is the downlink channel
-   Ptr<RadioEnvironmentMapHelper> remHelper = CreateObject<RadioEnvironmentMapHelper> ();
-   remHelper->SetAttribute("Channel", PointerValue(lteHelper->GetDownlinkSpectrumChannel()));
-   remHelper->SetAttribute ("OutputFile", StringValue ("rem.out"));
-   remHelper->SetAttribute ("XMin", DoubleValue (-cellRadius));
-   remHelper->SetAttribute ("XMax", DoubleValue (3 * cellRadius));
-   remHelper->SetAttribute ("YMin", DoubleValue (-cellRadius));
-   remHelper->SetAttribute ("YMax", DoubleValue (cellRadius));
-   remHelper->SetAttribute ("Z", DoubleValue (0.0));
-   remHelper->Install ();
 
     Simulator::Run();
 

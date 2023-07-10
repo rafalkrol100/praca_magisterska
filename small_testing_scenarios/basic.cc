@@ -18,8 +18,8 @@ using namespace ns3;
 int main(int argc, char *argv[])
 {
     // parameters
-    int numberOfUEs = 25;
-    double cellRadius = 74;
+    int numberOfUEs = 10;
+    double cellRadius = 25;
     NS_LOG_UNCOND("Number of UEs: " + std::to_string(numberOfUEs) + "; Cell Radius: " + std::to_string(cellRadius));
 
 

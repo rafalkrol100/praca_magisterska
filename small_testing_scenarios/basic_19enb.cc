@@ -24,12 +24,12 @@ void installMobility(Vector stationPosition, double cellRadius, std::string boun
                                     "X", StringValue(x),
                                     "Y", StringValue(y),
                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
-    // ueMobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
-    //                             "Mode", StringValue("Time"),
-    //                             "Time", StringValue("2s"),
-    //                             "Speed", StringValue("ns3::ConstantRandomVariable[Constant=1.0]"),
-    //                             "Bounds", StringValue(bounds));
-    ueMobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+    ueMobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
+                                "Mode", StringValue("Time"),
+                                "Time", StringValue("2s"),
+                                "Speed", StringValue("ns3::ConstantRandomVariable[Constant=1.0]"),
+                                "Bounds", StringValue(bounds));
+    //ueMobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
     ueMobility.Install(ueNodes);
 }
 
@@ -345,6 +345,8 @@ int main(int argc, char *argv[])
     Simulator::Run();
 
     flowMonitor->SerializeToXmlFile("Results.xml", false, true);
+    AsciiTraceHelper ascii;
+    MobilityHelper::EnableAsciiAll(ascii.CreateFileStream("mobility-trace-example.mob"));
 
     Simulator::Destroy();
     return 0;
