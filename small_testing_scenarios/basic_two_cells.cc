@@ -14,7 +14,6 @@
 #include "ns3/flow-monitor-helper.h"
 #include "ns3/config-store.h"
 
-
 using namespace ns3;
 
 int main(int argc, char *argv[])
@@ -84,24 +83,13 @@ int main(int argc, char *argv[])
         
     }
     
-
     // lists of devices positions
     Ptr<ListPositionAllocator> enbPositionAlloc = CreateObject<ListPositionAllocator>();
     //Ptr<ListPositionAllocator> uePositionAlloc = CreateObject<ListPositionAllocator>();
 
     // putting values of coordinates to simulation position array
-   
     enbPositionAlloc->Add(Vector(0.0, 0.0, 0.0));
     enbPositionAlloc->Add(Vector(2 * cellRadius, 0.0, 0.0));
-
-    // for (int i = 0; i < numberOfUEs; i++)
-    // {
-    //     uePositionAlloc->Add(Vector(cellRadius, 0.0, 0.0));
-    // }
-    //uePositionAlloc->Add(Vector(cellRadius, 0.0, 0.0));
-    // uePositionAlloc->Add(Vector(0.0, cellRadius, 0.0));
-    // uePositionAlloc->Add(Vector(0.0, -cellRadius, 0.0));
-    // uePositionAlloc->Add(Vector(-cellRadius, 0.0, 0.0));
 
     // set mobility parameters
     MobilityHelper enbMobility;
@@ -188,7 +176,6 @@ int main(int argc, char *argv[])
     clientApps.Stop(MilliSeconds(2000));
     Simulator::Stop(MilliSeconds(4000));
 
-    lteHelper->EnablePhyTraces();
     lteHelper->EnableMacTraces();
     lteHelper->EnableRlcTraces();
     lteHelper->EnableUlPhyTraces();

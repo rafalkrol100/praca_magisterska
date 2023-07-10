@@ -12,16 +12,18 @@
 #include "ns3/applications-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/flow-monitor-helper.h"
+#include "ns3/config-store.h"
 
 using namespace ns3;
 
 int main(int argc, char *argv[])
 {
     // parameters
-    int numberOfUEs = 20;
+    int numberOfUEsPerCell = 20;
     double cellRadius = 5;
-    NS_LOG_UNCOND("Number of UEs: " + std::to_string(numberOfUEs) + "; Cell Radius: " + std::to_string(cellRadius));
+    NS_LOG_UNCOND("Number of UEs per cell: " + std::to_string(numberOfUEsPerCell) + "; Cell Radius: " + std::to_string(cellRadius));
 
+    Config::SetDefault("ns3::LteEnbRrc::DefaultTransmissionMode", UintegerValue(1)); // MIMO Tx diversity(1 layer)
 
     // create LTE helper
     Ptr<LteHelper> lteHelper = CreateObject<LteHelper>();
@@ -30,7 +32,7 @@ int main(int argc, char *argv[])
     lteHelper->SetPathlossModelAttribute("Exponent", DoubleValue(3.9));
     lteHelper->SetPathlossModelAttribute("ReferenceLoss", DoubleValue(38.57)); // ref. loss in dB at 1m for 2.025GHz
     lteHelper->SetPathlossModelAttribute("ReferenceDistance", DoubleValue(1));
-    lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(6));
+    lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(25));
 
     // create EPC helper
     Ptr<PointToPointEpcHelper> epcHelper = CreateObject<PointToPointEpcHelper>();
@@ -64,18 +66,37 @@ int main(int argc, char *argv[])
 
     // nodes containers for eNBs and UEs
     NodeContainer enbNodes;
-    enbNodes.Create(1);
+    enbNodes.Create(12);
     NodeContainer ueNodes;
-    ueNodes.Create(numberOfUEs);
+    ueNodes.Create(2 * numberOfUEsPerCell);
+
+    NodeContainer ueNodes1;
+    NodeContainer ueNodes2;
+
+    for (int i = 0; i < (2 * numberOfUEsPerCell); i++)
+    {
+        if (i % 2 == 0)
+        {
+            ueNodes1.Add(ueNodes.Get(i));
+        }
+        else
+        {
+            ueNodes2.Add(ueNodes.Get(i));
+        }
+    }
 
     // lists of devices positions
     Ptr<ListPositionAllocator> enbPositionAlloc = CreateObject<ListPositionAllocator>();
-    //Ptr<ListPositionAllocator> uePositionAlloc = CreateObject<ListPositionAllocator>();
+    // Ptr<ListPositionAllocator> uePositionAlloc = CreateObject<ListPositionAllocator>();
 
     // putting values of coordinates to simulation position array
-    for (int i = 0; i < 1; i++)
+    for (int j = 0; j < 6; j++)
     {
         enbPositionAlloc->Add(Vector(0.0, 0.0, 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
+        enbPositionAlloc->Add(Vector(2 * cellRadius, 0.0, 0.0));
     }
 
     // set mobility parameters
@@ -84,25 +105,70 @@ int main(int argc, char *argv[])
     enbMobility.SetPositionAllocator(enbPositionAlloc);
     enbMobility.Install(enbNodes);
 
-    MobilityHelper ueMobility;
-    ueMobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
-    //ueMobility.SetPositionAllocator(uePositionAlloc);
+    MobilityHelper ueMobility1;
+    ueMobility1.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+    MobilityHelper ueMobility2;
+    ueMobility2.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+    // ueMobility.SetPositionAllocator(uePositionAlloc);
     std::string cellRadiusString = std::to_string(cellRadius);
-    ueMobility.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
-                                    "X", StringValue("0.0"),
-                                    "Y", StringValue("0.0"),
-                                    "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+    std::string cellRadiusString2 = std::to_string(2 * cellRadius);
 
-    ueMobility.Install(ueNodes);
+    ueMobility1.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
+                                     "X", StringValue("0.0"),
+                                     "Y", StringValue("0.0"),
+                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+
+    ueMobility2.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
+                                     "X", StringValue(cellRadiusString2),
+                                     "Y", StringValue("0.0"),
+                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+
+    ueMobility1.Install(ueNodes1);
+    ueMobility2.Install(ueNodes2);
 
     // instal devices
     NetDeviceContainer enbDevs;
     NetDeviceContainer ueDevs;
 
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < 2; i++)
     {
-        enbDevs.Add(lteHelper->InstallEnbDevice(enbNodes.Get(i)));
+        for (int j = 0; j < 6; j++)
+        {
+            NS_LOG_UNCOND("    Sector: " + std::to_string(j));
+                // set up strict frequency reuse model
+                lteHelper->SetFfrAlgorithmType("ns3::LteFrStrictAlgorithm");
+                lteHelper->SetFfrAlgorithmAttribute("UlCommonSubBandwidth", UintegerValue(6));
+                lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandOffset", UintegerValue(6));
+                lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandwidth", UintegerValue(6));
+
+                std::string antennaModel = "ns3::CosineAntennaModel";
+                double orientation = 0 + j * (360 / 6);
+                double horizontalBeamwidth = 360 / 6;
+                double maxGain = 0.0;
+                int enbNodeIndex = i * 6 + j;
+
+                NS_LOG_UNCOND("        Antenna Model: " + antennaModel);
+                NS_LOG_UNCOND("        Orientation: " + std::to_string(orientation));
+                NS_LOG_UNCOND("        Horizontal Beam Width: " + std::to_string(horizontalBeamwidth));
+                NS_LOG_UNCOND("        Max Gain: " + std::to_string(maxGain));
+                NS_LOG_UNCOND("        Enb Node Index: " + std::to_string(enbNodeIndex));
+
+                lteHelper->SetEnbAntennaModelType(antennaModel);
+                lteHelper->SetEnbAntennaModelAttribute("Orientation", DoubleValue(orientation));
+                lteHelper->SetEnbAntennaModelAttribute("HorizontalBeamwidth", DoubleValue(horizontalBeamwidth));
+                lteHelper->SetEnbAntennaModelAttribute("MaxGain", DoubleValue(maxGain));
+
+                enbDevs.Add(lteHelper->InstallEnbDevice(enbNodes.Get(enbNodeIndex)));
+                Ptr<Node> enb = enbNodes.Get(enbNodeIndex);
+                Ptr<NetDevice> enbLteDev = enb->GetDevice(0);
+                Ptr<LteEnbNetDevice> enbLteDevice = enbLteDev->GetObject<LteEnbNetDevice>();
+                uint16_t enbCellId = enbLteDevice->GetCellId();
+                NS_LOG_UNCOND("        Cell Id: " + std::to_string(enbCellId));
+
+        }
     }
+
+    Config::SetDefault("ns3::LteUePowerControl::AccumulationEnabled", BooleanValue(false));
 
     ueDevs = lteHelper->InstallUeDevice(ueNodes);
 
@@ -121,7 +187,7 @@ int main(int argc, char *argv[])
     }
 
     // attach UEs to eNBs
-    for (int i = 0; i < numberOfUEs; i++)
+    for (int i = 0; i < (numberOfUEsPerCell * 2); i++)
     {
         lteHelper->Attach(ueDevs.Get(i));
     }
