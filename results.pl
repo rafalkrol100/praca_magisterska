@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
-my $numberOfImsi = 40;
-my $numberOfCellId = 2;
+my $numberOfImsi = 38;
+my $numberOfCellId = 19*6;
 
 # UL Sinr stats block   
 my $filenameSINROutput1 = "UlSinrStats.csv" or die;
@@ -27,8 +27,14 @@ while (my $lineSINR = <$dataSINR>)
 my $filenameSINROutput = "outputSINR.csv" or die;
 open(FSO, '>', $filenameSINROutput) or die $!;
 
+my @sums = (0.0);
+my @numberOfProbes = (0);
+my @summaryRows = ("");
+my @numbers = (0);
+
 my @i = (1..$numberOfImsi);
 for(@i){
+    #push(@sums, 0.0);
     my $fileUlSinrStats = "UlSinrStats.csv" or die;
     open(my $dataUlSinrStats, '<', $fileUlSinrStats) or die;
     print FSO "imsi: ","$_","\n";
@@ -46,8 +52,34 @@ for(@i){
         {
             print FSO $lineUlSinrStats;
             print FSO "\n";
+
+            my @dottedSplit = split(/\,/, $wordsUlSinrStats[4]);
+            my $dottedJoin = join('.', @dottedSplit);
+
+            $sums[$_] = $sums[$_] + $dottedJoin;
+            $numberOfProbes[$_] = $numberOfProbes[$_] + 1;
         }
     }
+    my $mean = $sums[$_] / $numberOfProbes[$_];
+    print FSO "sum: ;","$sums[$_]","; no of probes: ;","$numberOfProbes[$_]","; mean: ;","$mean","\n";
+    push(@summaryRows, ("imsi: ;$_;sum: ;","$sums[$_]","; no of probes: ;","$numberOfProbes[$_]","; mean: ;","$mean","\n"));
+    push(@numbers, $mean);
+}
+
+print FSO "\n";
+print FSO "\n";
+print FSO "\n";
+for(@summaryRows)
+{
+    print FSO "$_";
+}
+
+my @sorted_numbers = sort {$a <=> $b} @numbers;
+for(@sorted_numbers)
+{
+    my @dottedSplit = split(/\./, $_);
+    my $dottedJoin = join(',', @dottedSplit);
+    print FSO "$dottedJoin","\n";
 }
 
 # UL Interference stats block
