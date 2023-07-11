@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     lteHelper->SetPathlossModelAttribute("Exponent", DoubleValue(3.9));
     lteHelper->SetPathlossModelAttribute("ReferenceLoss", DoubleValue(38.57)); // ref. loss in dB at 1m for 2.025GHz
     lteHelper->SetPathlossModelAttribute("ReferenceDistance", DoubleValue(1));
-    lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(25));
+    lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(100));
 
     // create EPC helper
     Ptr<PointToPointEpcHelper> epcHelper = CreateObject<PointToPointEpcHelper>();
@@ -137,9 +137,9 @@ int main(int argc, char *argv[])
             NS_LOG_UNCOND("    Sector: " + std::to_string(j));
                 // set up strict frequency reuse model
                 lteHelper->SetFfrAlgorithmType("ns3::LteFrStrictAlgorithm");
-                lteHelper->SetFfrAlgorithmAttribute("UlCommonSubBandwidth", UintegerValue(6));
-                lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandOffset", UintegerValue(6));
-                lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandwidth", UintegerValue(6));
+                lteHelper->SetFfrAlgorithmAttribute("UlCommonSubBandwidth", UintegerValue(50));
+                lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandOffset", UintegerValue(i*25));
+                lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandwidth", UintegerValue(25));
 
                 std::string antennaModel = "ns3::CosineAntennaModel";
                 double orientation = 0 + j * (360 / 6);

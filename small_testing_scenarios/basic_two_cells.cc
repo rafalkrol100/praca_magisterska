@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     lteHelper->SetPathlossModelAttribute("Exponent", DoubleValue(3.9));
     lteHelper->SetPathlossModelAttribute("ReferenceLoss", DoubleValue(38.57)); // ref. loss in dB at 1m for 2.025GHz
     lteHelper->SetPathlossModelAttribute("ReferenceDistance", DoubleValue(1));
-    lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(6));
+    lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(75));
 
     // create EPC helper
     Ptr<PointToPointEpcHelper> epcHelper = CreateObject<PointToPointEpcHelper>();
