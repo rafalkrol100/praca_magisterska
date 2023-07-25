@@ -24,6 +24,27 @@ while (my $lineSINR = <$dataSINR>)
     print FSO1 "\n";
 }
 
+#coordinates operations
+my @coordinatesVector = (0.0);
+my $fileUeCoordinates = "ue_coordinates.txt" or die;
+open(my $dataUeCoordinates, '<', $fileUeCoordinates) or die;
+
+while(my $lineUeCoordinates = <$dataUeCoordinates>)
+{
+    chomp $lineUeCoordinates;
+    push(@coordinatesVector, $lineUeCoordinates);
+}
+
+my @enbCoordinatesVector;
+my $fileEnbCoordinates = "enb_coordinates.txt" or die;
+open(my $dataEnbCoordinates, '<', $fileEnbCoordinates) or die;
+
+while(my $lineEnbCoordinates = <$dataEnbCoordinates>)
+{
+    chomp $lineEnbCoordinates;
+    push(@enbCoordinatesVector, $lineEnbCoordinates);
+}
+
 my $filenameSINROutput = "outputSINR.csv" or die;
 open(FSO, '>', $filenameSINROutput) or die $!;
 
@@ -61,14 +82,29 @@ for(@i){
         }
     }
     my $mean = $sums[$_] / $numberOfProbes[$_];
-    print FSO "sum: ;","$sums[$_]","; no of probes: ;","$numberOfProbes[$_]","; mean: ;","$mean","\n";
-    push(@summaryRows, ("imsi: ;$_;sum: ;","$sums[$_]","; no of probes: ;","$numberOfProbes[$_]","; mean: ;","$mean","\n"));
+
+    my @dottedSplit1 = split(/\./, $coordinatesVector[$_]);
+    my $dottedJoin1 = join(',', @dottedSplit1);
+    my @splittedUeCoordinates = split(/\:/, $dottedJoin1);
+    print FSO "sum: ;","$sums[$_]","; no of probes: ;","$numberOfProbes[$_]","; mean: ;","$mean",";coordinates: ;","$coordinatesVector[$_]","; coordinatex:;","$splittedUeCoordinates[0]",";coordinatey:;","$splittedUeCoordinates[1]","\n";
+    push(@summaryRows, ("imsi: ;$_;sum: ;","$sums[$_]","; no of probes: ;","$numberOfProbes[$_]","; mean: ;","$mean",";coordinates: ;","$coordinatesVector[$_]","; coordinatex:;","$splittedUeCoordinates[0]",";coordinatey:;","$splittedUeCoordinates[1]","\n"));
     push(@numbers, $mean);
 }
 
 print FSO "\n";
 print FSO "\n";
 print FSO "\n";
+for(@enbCoordinatesVector)
+{
+    my @splittedEnb = split(/ /, $_);
+    my @dottedSplitx1 = split(/\./, $splittedEnb[0]);
+    my $dottedJoinx1 = join(',', @dottedSplitx1);
+    my @dottedSplity1 = split(/\./, $splittedEnb[1]);
+    my $dottedJoiny1 = join(',', @dottedSplity1);
+
+    print FSO "$dottedJoinx1",";","$dottedJoiny1","\n";
+}
+
 for(@summaryRows)
 {
     print FSO "$_";

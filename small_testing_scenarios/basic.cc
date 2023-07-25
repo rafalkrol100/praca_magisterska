@@ -15,6 +15,52 @@
 
 using namespace ns3;
 
+void PrintInfo ()
+{
+    Ptr<Node> n0 =  ns3::NodeList::GetNode(0);
+    Ptr<Node> n1 =  ns3::NodeList::GetNode(1);
+    Ptr<Node> n2 =  ns3::NodeList::GetNode(2);
+    Ptr<Node> n3 =  ns3::NodeList::GetNode(3);
+    Ptr<Node> n4 =  ns3::NodeList::GetNode(4);
+    Ptr<Node> n5 =  ns3::NodeList::GetNode(5);
+    Ptr<Node> n6 =  ns3::NodeList::GetNode(6);
+    Ptr<Node> n7 =  ns3::NodeList::GetNode(7);
+    Ptr<Node> n8 =  ns3::NodeList::GetNode(8);
+    Ptr<Node> n9 =  ns3::NodeList::GetNode(9);
+    Ptr<Node> n10 =  ns3::NodeList::GetNode(10);
+    Ptr<Node> n11 =  ns3::NodeList::GetNode(11);
+
+    Ptr<MobilityModel> m0 = n0->GetObject<MobilityModel> ();
+    Ptr<MobilityModel> m1 = n1->GetObject<MobilityModel> ();
+    Ptr<MobilityModel> m2 = n2->GetObject<MobilityModel> ();
+    Ptr<MobilityModel> m3 = n3->GetObject<MobilityModel> ();
+    Ptr<MobilityModel> m4 = n4->GetObject<MobilityModel> ();
+    Ptr<MobilityModel> m5 = n5->GetObject<MobilityModel> ();
+    Ptr<MobilityModel> m6 = n6->GetObject<MobilityModel> ();
+    Ptr<MobilityModel> m7 = n7->GetObject<MobilityModel> ();
+    Ptr<MobilityModel> m8 = n8->GetObject<MobilityModel> ();
+    Ptr<MobilityModel> m9 = n9->GetObject<MobilityModel> ();
+    Ptr<MobilityModel> m10 = n10->GetObject<MobilityModel> ();
+    Ptr<MobilityModel> m11 = n11->GetObject<MobilityModel> ();
+
+
+    NS_LOG_UNCOND(m0);
+    NS_LOG_UNCOND(m1);
+    NS_LOG_UNCOND(m2);
+    NS_LOG_UNCOND(m3);
+    NS_LOG_UNCOND(m4);
+    NS_LOG_UNCOND(m5);
+    NS_LOG_UNCOND(m6);
+    NS_LOG_UNCOND(m7);
+    NS_LOG_UNCOND(m8);
+    NS_LOG_UNCOND(m9);
+    NS_LOG_UNCOND(m10);
+    NS_LOG_UNCOND(m11);
+
+    
+    
+    //std::cout << "n0 position:" << pos.x << std::endl;
+}
 int main(int argc, char *argv[])
 {
     // parameters
@@ -152,6 +198,7 @@ int main(int argc, char *argv[])
     serverApps.Stop(MilliSeconds(2000));
     clientApps.Stop(MilliSeconds(2000));
     Simulator::Stop(MilliSeconds(4000));
+    Simulator::Schedule (MilliSeconds (1500), &PrintInfo);
 
     lteHelper->EnableMacTraces();
     lteHelper->EnableRlcTraces();
