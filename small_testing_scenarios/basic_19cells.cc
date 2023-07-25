@@ -331,7 +331,7 @@ int main(int argc, char *argv[])
 
     ueMobility15.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                       "X", StringValue(cellRadiusString3Minus),
-                                      "Y", StringValue("0.0"),
+                                      "Y", StringValue(cellRadiusStringSqrt3Minus),
                                       "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
 
     ueMobility16.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
