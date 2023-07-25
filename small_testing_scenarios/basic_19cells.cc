@@ -246,6 +246,7 @@ int main(int argc, char *argv[])
     ueMobility19.SetMobilityModel("ns3::ConstantPositionMobilityModel");
 
     // ueMobility.SetPositionAllocator(uePositionAlloc);
+    std::string cellRadiusStringMultiplied = std::to_string(cellRadius*0.3);
     std::string cellRadiusString = std::to_string(cellRadius);
     std::string cellRadiusString2 = std::to_string(2 * cellRadius);
     std::string cellRadiusString3 = std::to_string(3 * cellRadius);
@@ -262,97 +263,97 @@ int main(int argc, char *argv[])
     ueMobility1.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                      "X", StringValue("0.0"),
                                      "Y", StringValue("0.0"),
-                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility2.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                      "X", StringValue(cellRadiusString2),
                                      "Y", StringValue("0.0"),
-                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility3.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                      "X", StringValue(cellRadiusString),
                                      "Y", StringValue(cellRadiusStringSqrt3),
-                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility4.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                      "X", StringValue(cellRadiusStringMinus),
                                      "Y", StringValue(cellRadiusStringSqrt3),
-                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility5.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                      "X", StringValue(cellRadiusString2Minus),
                                      "Y", StringValue("0.0"),
-                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility6.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                      "X", StringValue(cellRadiusStringMinus),
                                      "Y", StringValue(cellRadiusStringSqrt3Minus),
-                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility7.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                      "X", StringValue(cellRadiusString),
                                      "Y", StringValue(cellRadiusStringSqrt3Minus),
-                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility8.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                      "X", StringValue(cellRadiusString4),
                                      "Y", StringValue("0.0"),
-                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility9.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                      "X", StringValue(cellRadiusString3),
                                      "Y", StringValue(cellRadiusStringSqrt3),
-                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                     "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility10.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                       "X", StringValue(cellRadiusString2),
                                       "Y", StringValue(cellRadiusString2Sqrt3),
-                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility11.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                       "X", StringValue("0.0"),
                                       "Y", StringValue(cellRadiusString2Sqrt3),
-                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility12.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                       "X", StringValue(cellRadiusString2Minus),
                                       "Y", StringValue(cellRadiusString2Sqrt3),
-                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility13.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                       "X", StringValue(cellRadiusString3Minus),
                                       "Y", StringValue(cellRadiusStringSqrt3),
-                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility14.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                       "X", StringValue(cellRadiusString4Minus),
-                                      "Y", StringValue(cellRadiusStringSqrt3Minus),
-                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                      "Y", StringValue("0.0"),
+                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility15.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                       "X", StringValue(cellRadiusString3Minus),
                                       "Y", StringValue(cellRadiusStringSqrt3Minus),
-                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility16.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                       "X", StringValue(cellRadiusString2Minus),
                                       "Y", StringValue(cellRadiusString2Sqrt3Minus),
-                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility17.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                       "X", StringValue("0.0"),
                                       "Y", StringValue(cellRadiusString2Sqrt3Minus),
-                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility18.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                       "X", StringValue(cellRadiusString2),
                                       "Y", StringValue(cellRadiusString2Sqrt3Minus),
-                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility19.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
                                       "X", StringValue(cellRadiusString3),
                                       "Y", StringValue(cellRadiusStringSqrt3Minus),
-                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusString + "]"));
+                                      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + cellRadiusStringMultiplied + "]"));
 
     ueMobility1.Install(ueNodes1);
     ueMobility2.Install(ueNodes2);
