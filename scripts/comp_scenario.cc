@@ -21,7 +21,9 @@ int main(int argc, char *argv[])
     int numberOfUEsPerCell = 2;
     double cellRadius = 15;
     double radiusMultiplier = 0.3;
-    NS_LOG_UNCOND("basic_scenario.cc | Number of UEs per cell: " + std::to_string(numberOfUEsPerCell) + "; Cell Radius: " + std::to_string(cellRadius));
+    NS_LOG_UNCOND("comp_scenario.cc | Number of UEs per cell: " + std::to_string(numberOfUEsPerCell) + "; Cell Radius: " + std::to_string(cellRadius));
+
+    Config::SetDefault("ns3::LteEnbRrc::DefaultTransmissionMode", UintegerValue(1)); // MIMO Tx diversity(1 layer)
 
     // create LTE helper
     Ptr<LteHelper> lteHelper = CreateObject<LteHelper>();
@@ -30,7 +32,7 @@ int main(int argc, char *argv[])
     lteHelper->SetPathlossModelAttribute("Exponent", DoubleValue(3.9));
     lteHelper->SetPathlossModelAttribute("ReferenceLoss", DoubleValue(38.57)); // ref. loss in dB at 1m for 2.025GHz
     lteHelper->SetPathlossModelAttribute("ReferenceDistance", DoubleValue(1));
-    lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(75));
+    lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(100));
     lteHelper->SetAttribute("FadingModel", StringValue("ns3::TraceFadingLossModel"));
 
     std::ifstream ifTraceFile;
@@ -78,7 +80,7 @@ int main(int argc, char *argv[])
 
     // nodes containers for eNBs and UEs
     NodeContainer enbNodes;
-    enbNodes.Create(19);
+    enbNodes.Create(19*6);
     NodeContainer ueNodes;
     ueNodes.Create(19 * numberOfUEsPerCell);
 
@@ -187,26 +189,82 @@ int main(int argc, char *argv[])
     // Ptr<ListPositionAllocator> uePositionAlloc = CreateObject<ListPositionAllocator>();
 
     // putting values of coordinates to simulation position array
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(0.0, 0.0, 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(2 * cellRadius, 0.0, 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(cellRadius, cellRadius * sqrt(3), 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(-cellRadius, cellRadius * sqrt(3), 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(-2 * cellRadius, 0.0, 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(-cellRadius, -cellRadius * sqrt(3), 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(cellRadius, -cellRadius * sqrt(3), 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(4 * cellRadius, 0.0, 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(3 * cellRadius, cellRadius * sqrt(3), 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(2 * cellRadius, 2 * sqrt(3) * cellRadius, 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(0.0, 2 * sqrt(3) * cellRadius, 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(-2 * cellRadius, 2 * sqrt(3) * cellRadius, 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(-3 * cellRadius, sqrt(3) * cellRadius, 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(-4 * cellRadius, 0.0, 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(-3 * cellRadius, -cellRadius * sqrt(3), 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(-2 * cellRadius, -2 * sqrt(3) * cellRadius, 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(0.0, -2 * sqrt(3) * cellRadius, 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(2 * cellRadius, -2 * sqrt(3) * cellRadius, 0.0));
+    }
+    for (int j = 0; j < 6; j++)
+    {
     enbPositionAlloc->Add(Vector(3 * cellRadius, -cellRadius * sqrt(3), 0.0));
-
+    }
     // set mobility parameters
     MobilityHelper enbMobility;
     enbMobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
@@ -214,7 +272,7 @@ int main(int argc, char *argv[])
     enbMobility.Install(enbNodes);
 
     std::ofstream MyFile("enb_coordinates.txt");
-    for (int i = 0; i < 19; i++)
+    for (int i = 0; i < 19 * 6; i+=6)
     {
         MyFile << enbNodes.Get(i)->GetObject<MobilityModel>()->GetPosition() << std::endl;
     }
@@ -403,7 +461,45 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < 19; i++)
     {
-        enbDevs.Add(lteHelper->InstallEnbDevice(enbNodes.Get(i)));
+        for (int j = 0; j < 6; j++)
+        {
+            NS_LOG_UNCOND("    Sector: " + std::to_string(j));
+                int offset = 0;
+                if (j % 2 == 1) 
+                {
+                    offset = 25;
+                }
+                // set up strict frequency reuse model
+                lteHelper->SetFfrAlgorithmType("ns3::LteFrStrictAlgorithm");
+                lteHelper->SetFfrAlgorithmAttribute("UlCommonSubBandwidth", UintegerValue(50));
+                lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandOffset", UintegerValue(offset));
+                lteHelper->SetFfrAlgorithmAttribute("UlEdgeSubBandwidth", UintegerValue(25));
+
+                std::string antennaModel = "ns3::CosineAntennaModel";
+                double orientation = 0 + j * (360 / 6);
+                double horizontalBeamwidth = 360 / 6;
+                double maxGain = 0.0;
+                int enbNodeIndex = i * 6 + j;
+
+                NS_LOG_UNCOND("        Antenna Model: " + antennaModel);
+                NS_LOG_UNCOND("        Orientation: " + std::to_string(orientation));
+                NS_LOG_UNCOND("        Horizontal Beam Width: " + std::to_string(horizontalBeamwidth));
+                NS_LOG_UNCOND("        Max Gain: " + std::to_string(maxGain));
+                NS_LOG_UNCOND("        Enb Node Index: " + std::to_string(enbNodeIndex));
+
+                lteHelper->SetEnbAntennaModelType(antennaModel);
+                lteHelper->SetEnbAntennaModelAttribute("Orientation", DoubleValue(orientation));
+                lteHelper->SetEnbAntennaModelAttribute("HorizontalBeamwidth", DoubleValue(horizontalBeamwidth));
+                lteHelper->SetEnbAntennaModelAttribute("MaxGain", DoubleValue(maxGain));
+
+                enbDevs.Add(lteHelper->InstallEnbDevice(enbNodes.Get(enbNodeIndex)));
+                Ptr<Node> enb = enbNodes.Get(enbNodeIndex);
+                Ptr<NetDevice> enbLteDev = enb->GetDevice(0);
+                Ptr<LteEnbNetDevice> enbLteDevice = enbLteDev->GetObject<LteEnbNetDevice>();
+                uint16_t enbCellId = enbLteDevice->GetCellId();
+                NS_LOG_UNCOND("        Cell Id: " + std::to_string(enbCellId));
+
+        }
     }
 
     ueDevs = lteHelper->InstallUeDevice(ueNodes);
@@ -455,11 +551,11 @@ int main(int argc, char *argv[])
     clientApps.Stop(MilliSeconds(2000));
     Simulator::Stop(MilliSeconds(3000));
 
-    //lteHelper->EnableMacTraces();
-    //lteHelper->EnableRlcTraces();
+    // lteHelper->EnableMacTraces();
+    // lteHelper->EnableRlcTraces();
     lteHelper->EnableUlPhyTraces();
-    //lteHelper->EnableUlRxPhyTraces();
-    //lteHelper->EnableUlTxPhyTraces();
+    // lteHelper->EnableUlRxPhyTraces();
+    // lteHelper->EnableUlTxPhyTraces();
 
     Simulator::Run();
 
