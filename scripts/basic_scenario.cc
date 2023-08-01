@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     // parameters
     int numberOfUEsPerCell = 2;
     double cellRadius = 15;
-    NS_LOG_UNCOND("basic_19cells.cc | Number of UEs per cell: " + std::to_string(numberOfUEsPerCell) + "; Cell Radius: " + std::to_string(cellRadius));
+    NS_LOG_UNCOND("basic_scenario.cc | Number of UEs per cell: " + std::to_string(numberOfUEsPerCell) + "; Cell Radius: " + std::to_string(cellRadius));
 
     // create LTE helper
     Ptr<LteHelper> lteHelper = CreateObject<LteHelper>();
@@ -30,6 +30,20 @@ int main(int argc, char *argv[])
     lteHelper->SetPathlossModelAttribute("ReferenceLoss", DoubleValue(38.57)); // ref. loss in dB at 1m for 2.025GHz
     lteHelper->SetPathlossModelAttribute("ReferenceDistance", DoubleValue(1));
     lteHelper->SetEnbDeviceAttribute("UlBandwidth", UintegerValue(75));
+    lteHelper->SetAttribute("FadingModel", StringValue("ns3::TraceFadingLossModel"));
+
+    std::ifstream ifTraceFile;
+    ifTraceFile.open("../../src/lte/model/fading-traces/fading_trace_EPA_3kmph(3sec_75RBs).fad", std::ifstream::in);
+    if (ifTraceFile.good())
+    {
+        // script launched by test.py
+        lteHelper->SetFadingModelAttribute("TraceFilename", StringValue("../../src/lte/model/fading-traces/fading_trace_EPA_3kmph(3sec_75RBs).fad"));
+    }
+    else
+    {
+        // script launched as an example
+        lteHelper->SetFadingModelAttribute("TraceFilename", StringValue("src/lte/model/fading-traces/fading_trace_EPA_3kmph(3sec_75RBs).fad"));
+    }
 
     // create EPC helper
     Ptr<PointToPointEpcHelper> epcHelper = CreateObject<PointToPointEpcHelper>();
@@ -246,7 +260,7 @@ int main(int argc, char *argv[])
     ueMobility19.SetMobilityModel("ns3::ConstantPositionMobilityModel");
 
     // ueMobility.SetPositionAllocator(uePositionAlloc);
-    std::string cellRadiusStringMultiplied = std::to_string(cellRadius*0.3);
+    std::string cellRadiusStringMultiplied = std::to_string(cellRadius * 0.3);
     std::string cellRadiusString = std::to_string(cellRadius);
     std::string cellRadiusString2 = std::to_string(2 * cellRadius);
     std::string cellRadiusString3 = std::to_string(3 * cellRadius);
@@ -438,7 +452,7 @@ int main(int argc, char *argv[])
 
     serverApps.Stop(MilliSeconds(2000));
     clientApps.Stop(MilliSeconds(2000));
-    Simulator::Stop(MilliSeconds(4000));
+    Simulator::Stop(MilliSeconds(3000));
 
     lteHelper->EnableMacTraces();
     lteHelper->EnableRlcTraces();

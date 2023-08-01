@@ -131,7 +131,7 @@ print FSI "\n";
 #Create data for enb coordinates block###############################################################################################
 for(@enbCoordinatesVector)
 {
-    my @splittedEnb = split(/ /, $_);
+    my @splittedEnb = split(/\:/, $_);
     my @dottedSplitx1 = split(/\./, $splittedEnb[0]);
     my $dottedJoinx1 = join(',', @dottedSplitx1);
     my @dottedSplity1 = split(/\./, $splittedEnb[1]);
