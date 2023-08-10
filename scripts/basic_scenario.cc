@@ -23,6 +23,12 @@ int main(int argc, char *argv[])
     double radiusMultiplier = 0.3;
     NS_LOG_UNCOND("basic_scenario.cc | Number of UEs per cell: " + std::to_string(numberOfUEsPerCell) + "; Cell Radius: " + std::to_string(cellRadius));
 
+    CommandLine cmd;
+    cmd.AddValue("numberOfUEsPerCell", "Number of user per cell", numberOfUEsPerCell);
+    cmd.AddValue("cellRadius", "Cell radius", cellRadius);
+    cmd.AddValue("radiusMultiplier", "Percentage of cell area available for ues", radiusMultiplier);
+    cmd.Parse (argc, argv);
+
     // create LTE helper
     Ptr<LteHelper> lteHelper = CreateObject<LteHelper>();
 
@@ -457,7 +463,7 @@ int main(int argc, char *argv[])
 
     //lteHelper->EnableMacTraces();
     //lteHelper->EnableRlcTraces();
-    lteHelper->EnableUlPhyTraces();
+    lteHelper->EnableUlSINRTraces();
     //lteHelper->EnableUlRxPhyTraces();
     //lteHelper->EnableUlTxPhyTraces();
 

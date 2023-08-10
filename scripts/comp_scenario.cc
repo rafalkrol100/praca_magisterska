@@ -18,10 +18,16 @@ using namespace ns3;
 int main(int argc, char *argv[])
 {
     // parameters
-    int numberOfUEsPerCell = 2;
-    double cellRadius = 15;
+    int numberOfUEsPerCell = 1;
+    double cellRadius = 10;
     double radiusMultiplier = 0.3;
     NS_LOG_UNCOND("comp_scenario.cc | Number of UEs per cell: " + std::to_string(numberOfUEsPerCell) + "; Cell Radius: " + std::to_string(cellRadius));
+
+    CommandLine cmd;
+    cmd.AddValue("numberOfUEsPerCell", "Number of user per cell", numberOfUEsPerCell);
+    cmd.AddValue("cellRadius", "Cell radius", cellRadius);
+    cmd.AddValue("radiusMultiplier", "Percentage of cell area available for ues", radiusMultiplier);
+    cmd.Parse (argc, argv);
 
     Config::SetDefault("ns3::LteEnbRrc::DefaultTransmissionMode", UintegerValue(1)); // MIMO Tx diversity(1 layer)
 
@@ -463,7 +469,6 @@ int main(int argc, char *argv[])
     {
         for (int j = 0; j < 6; j++)
         {
-            NS_LOG_UNCOND("    Sector: " + std::to_string(j));
                 int offset = 0;
                 if (j % 2 == 1) 
                 {
@@ -481,12 +486,6 @@ int main(int argc, char *argv[])
                 double maxGain = 0.0;
                 int enbNodeIndex = i * 6 + j;
 
-                NS_LOG_UNCOND("        Antenna Model: " + antennaModel);
-                NS_LOG_UNCOND("        Orientation: " + std::to_string(orientation));
-                NS_LOG_UNCOND("        Horizontal Beam Width: " + std::to_string(horizontalBeamwidth));
-                NS_LOG_UNCOND("        Max Gain: " + std::to_string(maxGain));
-                NS_LOG_UNCOND("        Enb Node Index: " + std::to_string(enbNodeIndex));
-
                 lteHelper->SetEnbAntennaModelType(antennaModel);
                 lteHelper->SetEnbAntennaModelAttribute("Orientation", DoubleValue(orientation));
                 lteHelper->SetEnbAntennaModelAttribute("HorizontalBeamwidth", DoubleValue(horizontalBeamwidth));
@@ -497,8 +496,6 @@ int main(int argc, char *argv[])
                 Ptr<NetDevice> enbLteDev = enb->GetDevice(0);
                 Ptr<LteEnbNetDevice> enbLteDevice = enbLteDev->GetObject<LteEnbNetDevice>();
                 uint16_t enbCellId = enbLteDevice->GetCellId();
-                NS_LOG_UNCOND("        Cell Id: " + std::to_string(enbCellId));
-
         }
     }
 
@@ -553,7 +550,7 @@ int main(int argc, char *argv[])
 
     // lteHelper->EnableMacTraces();
     // lteHelper->EnableRlcTraces();
-    lteHelper->EnableUlPhyTraces();
+    lteHelper->EnableUlSINRTraces();
     // lteHelper->EnableUlRxPhyTraces();
     // lteHelper->EnableUlTxPhyTraces();
 
