@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
-my $numberOfImsi = 38;
-my $numberOfCellId = 19*6;
+my $numberOfImsi = 19;
+my $numberOfCellId = 19;
 
 # Obtain data from UlSinrStats.txt and push it to UlSinrStats.csv in proper format ##################################################
 my $fileNameSINROutputCsv = "UlSinrStats.csv" or die;
@@ -131,7 +131,7 @@ print FSI "\n";
 #Create data for enb coordinates block###############################################################################################
 for(@enbCoordinatesVector)
 {
-    my @splittedEnb = split(/ /, $_);
+    my @splittedEnb = split(/\:/, $_);
     my @dottedSplitx1 = split(/\./, $splittedEnb[0]);
     my $dottedJoinx1 = join(',', @dottedSplitx1);
     my @dottedSplity1 = split(/\./, $splittedEnb[1]);
