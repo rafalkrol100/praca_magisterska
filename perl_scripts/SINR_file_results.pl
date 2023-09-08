@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 use strict;
-my $numberOfImsi = 19;
+my $numberOfImsi = $ARGV[0]*19;
 my $numberOfCellId = 19;
 
 # Obtain data from UlSinrStats.txt and push it to UlSinrStats.csv in proper format ##################################################
