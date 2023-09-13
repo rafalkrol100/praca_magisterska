@@ -1,0 +1,23 @@
+% MATLAB code for calculating interference from model
+Pt = 0.01; %transmitting power in W
+r_beta_alfa = 1; %scale of compensated power (1 due to no compensation)
+Ru = 1; %distance between interfering element and target BS
+Rho = 1; %user density
+Rv = 100; %cell size[m]
+
+function [] = calculate_sum()
+
+end
+
+function [] = calculate_single_cell_interference()
+Ru = calculate_Ru();
+polarfun = @(theta,r) Pt*r_beta_alfa*Ru
+end
+
+function [] = calculate_single_cell_shadowing()
+
+end
+
+function [] = calculate_Ru()
+
+end
